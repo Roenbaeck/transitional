@@ -1,27 +1,21 @@
-This is a well-conceived and technically rigorous paper that tackles a genuine gap in data representation theory. Here's my assessment across several dimensions:
+This revision addresses the three most substantive criticisms from my earlier assessment, and does so well. Here's how the picture changes:
 
-**Strengths**
+**What's been fixed**
 
-The core contribution — the posit/assertion duality — is elegant. Separating *what happened when* (posits) from *who believed what, when* (assertions) cleanly solves the provenance problem that haunts conventional databases. The insight that assertions are themselves posits, enabling recursive meta-commentary within a single uniform construct, is a genuinely satisfying piece of theoretical design.
+The derivation of the non-contradiction inequality is now genuinely illuminating. Walking through the positive-commitment accounting — where a negative certainty c_j implicitly allocates (1 + c_j) units toward other alternatives — makes the formula feel earned rather than stipulated. The observation that c = −1 contributes zero to the budget, so a positor can freely disbelieve unlimited alternatives without tightening their positive commitments, is a particularly clean result that was missing before.
 
-The running example (Archie, the beard, and the witnesses) is well chosen. It's simple enough to follow but rich enough to stress-test the formalism: conflicting witnesses, retractions, corrections, and eventual resolution all fall naturally out of the model rather than being bolted on.
+The Dempster-Shafer paragraph in related work is well-judged. It draws the parallel precisely (the two-element frame, the Bel/Pl relationship mirroring the bounded property) and then articulates the key difference clearly: signed certainty is per-positor and temporally indexed, whereas basic belief assignment is a static, source-global function. That's exactly the level of engagement the earlier draft needed.
 
-The signed certainty scale c∈[−1,1] is more expressive than classical probability, and the paper does a good job motivating why negative certainty (certainty in the complement) is conceptually distinct from a low probability. The well-behavedness properties (symmetric, canonical, bounded, exclusive, universal) are clearly defined and collectively coherent.
+The identification question is now handled with considerably more sophistication. Rather than just deferring it, the Note on identifiers actively argues for why it *should* sit outside the representation layer — encoding a particular identification process would bind the model to a single viewpoint and a specific time frame. The note also shows how co-reference disputes can still be expressed *within* the formalism as ordinary posits, which is a non-trivial and satisfying result.
 
-The RDF comparison in Section 6 is one of the strongest sections. The summary table is honest — using "conv." rather than a flat ✗ where conventions can partially address a gap — and the critique of write-time conflict resolution in Wikidata is sharp and accurate.
+The conclusion's clarification that the consumer receives "every surviving assertion with its positor identity, signed certainty, appearance time, and value" makes the deferred-resolution principle much more concrete.
 
-**Weaknesses and Open Questions**
+**What remains open**
 
-The non-contradiction inequality (Section 3) feels underdeveloped. The example demonstrates that it isn't violated, but there's no intuitive explanation of *why* that particular formula captures the right constraint, nor a proof that it's tight. A reader should be able to derive the formula from first principles, and currently they can't.
+The Traqula example still arrives late and in isolation. A reader naturally wonders: if two positors have conflicting positive certainties in the information-in-effect slice, what does the consumer actually *do* with them? Even one sentence sketching representative aggregation strategies (max certainty, weighted vote, recency-biased) would ground the "consumer decision" language without prescribing a policy.
 
-The paper defers identification, schema bootstrapping, and constraint enforcement to future work. That's legitimate, but it means the formalism as presented is somewhat free-floating — it's not yet clear how you ground identifiers (the unique identifiers in appearances) without circularity.
+The table in Section 6 marks RDF-star's per-positor signed certainty as "limited" without explaining what the limitation is. Since RDF-star is the closest competitor and the most actively developed, a sentence or footnote clarifying why "limited" rather than "ad hoc" or "×" would strengthen that comparison.
 
-The relationship to Dempster-Shafer theory and belief functions is conspicuously absent. The signed certainty scale and the bounded/symmetric properties are structurally very close to basic belief assignment, and readers from that tradition will notice the gap. Even a brief acknowledgement would strengthen the related work section.
+**Overall**
 
-The Traqula query example at the end is useful but arrives late and feels slightly tacked on. A more integrated treatment of how query-time conflict resolution actually works in practice — does the consumer receive all surviving assertions and choose, or does the system expose aggregation operators? — would make the "deferred resolution" principle more concrete.
-
-**Overall Verdict**
-
-This reads as a solid position-and-formalism paper at an early-to-mid stage of development. The foundations are sound, the presentation is careful, and the comparison with existing paradigms is fair-minded. The main work remaining is filling in the deferred topics (especially identification) and engaging more deeply with adjacent uncertainty formalisms. It would benefit from a worked implementation example that goes beyond the illustrative Traqula snippet — ideally one that demonstrates query-time conflict resolution producing observably different results under different consumer policies.
-
-Worth developing further. The core idea is genuinely useful.
+This is a meaningfully better paper. The three additions — the derivation, the DS comparison, and the identification note — each resolve a genuine gap rather than papering over it. The core formalism now stands on firmer ground and the relationship to adjacent traditions is honestly drawn. The remaining gaps are minor relative to what's been accomplished here.
