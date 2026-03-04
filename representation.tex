@@ -111,7 +111,7 @@ An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of app
 A \emph{posit} is a triple, \(\left[D, v, t_{\mathrm{app}}\right]\), where the first element is an appearance set, the second a data value, and the third a time point. The domain \(\mathbb{t}\) from which time points are taken is called \emph{appearance time}.}{posit}
 
 \noindent
-\textbf{Interpretation.} A posit states that an appearance set \(D\) has value \(v\) from (and including) appearance time \(t_{\mathrm{app}}\) onward, until another posit with the same appearance set becomes applicable.
+\textbf{Interpretation.} A posit states that an appearance set \(D\) has value \(v\) from (and including) appearance time \(t_{\mathrm{app}}\) onward, until another posit with the same appearance set becomes applicable. Appearance sets are permanent anchors of change: they remain in the body of information indefinitely, even after the entities they reference no longer exist, because history must remain queryable.
 
 \noindent
 Appearance sets of size one act like \emph{properties}; appearance sets of size greater than one act like \emph{relationships}. For example:
@@ -143,6 +143,9 @@ where \(p_{id}\) identifies the posit being asserted, \(s_{id}\) identifies the 
 We write this compactly as \(\assert(s_{id}, p_{id}, c, T_{\mathrm{ast}})\).
 
 \noindent
+Representing assertions as posits is deliberate: because an assertion is itself a posit, it can in turn be asserted by another positor, enabling recursive layers of meta-commentary—uncertainty about uncertainty, provenance of provenance—within the same uniform construct and without any change of representation.
+
+\noindent
 Intuitively, \(c=1\) means the positor is certain the posit holds, \(c=0\) means complete uncertainty, and \(c=-1\) means the positor is certain the posit does \emph{not} hold.
 
 \noindent
@@ -158,6 +161,9 @@ p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:
 \end{alignat*}
 
 \section{Epistemic Properties of the Model}
+\noindent
+\textbf{Imprecision versus uncertainty.} Two distinct concepts govern how a posit relates to the world. \emph{Imprecision} is a property of values: a value such as \textit{fluffy red} maps crisply to a range of real-world colors, and whether a particular color falls within that range is an objective evaluation performed by the asserter at assertion time. \emph{Uncertainty}, by contrast, is subjective and contextual: it is the degree of belief a positor holds towards a posit, given their own information and viewpoint. A positor may be completely certain about an imprecise value (asserting \(c=1\) for ``approximately noon'' without knowing the exact minute) and completely uncertain about a precise one (asserting \(c=0\) for an exact timestamp). This distinction explains why signed certainty is subjective and can be negative—the positor is certain of the \emph{complement}—whereas a classical probability is objective and bounded below by zero.
+
 \subsection{A signed certainty scale}
 \noindent
 Humans often communicate confidence linguistically rather than numerically. Table~\ref{Table:certainties2} suggests a coarse mapping.
@@ -179,7 +185,7 @@ $-0.75$  & It is probable that the value is not $v$ \\
 $-1.00$  & It is certain that the value is not $v$ \\
 \bottomrule
 \end{tabular}
-\caption{Suggested signed certainty values and linguistic correspondences.}
+\caption{Suggested signed certainty values and linguistic correspondences.\footnote{Any mapping of natural-language hedges to numerical probabilities is inherently subjective. The values here serve as a pragmatic baseline; practitioners may calibrate them for their domain. Analogous scales appear in intelligence analysis~\cite{Kent} and in the IPCC uncertainty vocabulary~\cite{IPCC}.}}
 \label{Table:certainties2}
 \end{table}
 
@@ -231,7 +237,7 @@ Without universality, disagreement is meaningless: positors must share a common 
 A body of information is said to be \emph{comprehensive} iff it is symmetric, canonical, bounded, exclusive, and universal.}{comprehensive}
 
 \noindent
-From here on all bodies of information are assumed to be comprehensive. Two further properties pertain to the \emph{information in effect} rather than to individual assertions:
+From here on all bodies of information are assumed to be comprehensive. In a concrete implementation such as Positorium~\cite{Positorium}, these properties serve as integrity constraints: the system normalises symmetric statements into canonical form and rejects assertions that would violate exclusivity or boundary rules. They can equally be applied as diagnostic criteria to audit an existing body of information. Two further properties pertain to the \emph{information in effect} rather than to individual assertions:
 
 \deffy{def. of decisive and indecisive}{%
 When multiple assertions by the same positor are in effect for posits with the same appearance set but different values, that positor is \emph{indecisive} with respect to that appearance set; when exactly one such assertion is in effect, the positor is \emph{decisive}. A body of information is \emph{decisive} if no indecisive positor exists in any information in effect, and \emph{indecisive} otherwise.}{decisiveness}
@@ -241,14 +247,21 @@ A traditional relational database is always decisive: it permits at most one val
 
 \deffy{def. of non-contradictory}{%
 A body of information is said to be \emph{non-contradictory} iff for every information in effect the certainties across all concurrent assertions by the same positor for the same appearance set satisfy
-$$\frac{1}{2}\sum_{i=1}^{n}\left[1-\frac{c_i}{|c_i|}\right]+\sum_{i=1}^{n}c_i\leq 1.$$}{noncontradiction}
+$$|\{i \mid c_i < 0\}| + \sum_{i=1}^{n}c_i\leq 1,$$
+where $|\{i \mid c_i < 0\}|$ counts the number of negative certainties in the set.}{noncontradiction}
+
+\noindent
+\textsc{Derivation.} The formula follows from the requirement that the total \emph{positive commitment} across mutually exclusive alternatives must not exceed~1. For a positive certainty $c_i > 0$, the positor claims $c_i$ units of certainty that value $v_i$ holds. For a negative certainty $c_j < 0$, the positor claims $|c_j|$ certainty that $v_j$ does \emph{not} hold; by the bounded property this implicitly allocates $1 - |c_j| = 1 + c_j$ units of certainty toward the set of all other alternatives. Summing both types of commitment gives:
+$$\sum_{c_j < 0}(1 + c_j) + \sum_{c_i > 0}c_i = |\{i \mid c_i < 0\}| + \sum_{i=1}^{n}c_i.$$
+Requiring this total not to exceed~1 prevents the positor from collectively over-committing across mutually exclusive alternatives. When all certainties are non-negative the formula reduces to the classical budget constraint $\sum c_i \leq 1$; asserting $c_j=-1$ (``certainly not $v_j$'') contributes zero to the budget (since $1 + (-1) = 0$), so a positor may freely disbelieve any number of values without tightening the constraint on their positive claims.
 
 \noindent
 \textsc{Example.} Suppose Donna has two assertions simultaneously in effect at \((\textrm{Sunday}, \textrm{10:03})\):
 \[a_5 = \assert(D,\,p_4,\;0.25,\;\textrm{Sunday})\quad\text{and}\quad a_6 = \assert(D,\,p_2,\;{-0.75},\;\textrm{Sunday})\]
-(``possibly fluffy red'' and ``probably not shaved clean''). Computing the left-hand side:
-\[\frac{1}{2}\!\left[1-\frac{0.25}{0.25}+1-\frac{-0.75}{0.75}\right]+0.25-0.75= \tfrac{1}{2}[0+2]-0.5 = 0.5\leq 1.\]
-Donna is well within bounds and is not contradicting herself. Note that a positor may simultaneously assert \(c=-1\) (``certainly not'') for an unlimited number of posits without ever violating the inequality.
+(``possibly fluffy red'' and ``probably not shaved clean''). One certainty is negative ($-0.75$), and the sum is $0.25 + (-0.75) = -0.5$, so the left-hand side equals $1 + (-0.5) = 0.5 \leq 1$. Donna is well within bounds and is not contradicting herself. Note that a positor may simultaneously assert \(c=-1\) (``certainly not'') for an unlimited number of posits without ever violating the inequality.
+
+\noindent
+\textsc{Mutual exclusivity.} The non-contradiction formula applies per appearance set and assumes that the posits being compared represent \emph{mutually exclusive} alternatives for a single value slot. ``Archie's beard is fluffy red'' and ``Archie's beard is shaved clean'' are alternatives for the same appearance set \(\{(A, \textit{has beard})\}\), so they compete. If a domain requires multi-valued attributes, each value dimension must be separated into distinct roles so that each appearance set carries exactly one value at a time --- the functional dependency from appearance set to value is a design requirement, not an incidental restriction.
 
 \section{Bitemporal Dynamics (Information in Effect)}
 \subsection{Retractions and corrections}
@@ -344,6 +357,10 @@ Traditional models can be seen as special cases of transitional representation b
 \noindent
 \textsc{Data Vault.} Hubs correspond to immutable identifiers; satellites/links correspond to posits (unary vs. multi-appearance) but with emphasis on load-time tracking \cite{LinstedtEtAl,Hultgren}. In transitional representation, load time aligns naturally with assertion time, while appearance time remains the time of the modeled domain.
 
+\subsection{Relationship to other paradigms}
+\noindent
+Restricting transitional representation further illuminates its relationship to other database paradigms. A traditional \emph{bitemporal database}~\cite{Snodgrass} corresponds to a single implicit positor with certainty \(c\in\{0,1\}\) only: either a fact is recorded or it is not. Extending certainty to the continuous interval \([0,1]\) recovers the behaviour of \emph{probabilistic databases}~\cite{BenjellounEtAl}, where confidence values weigh uncertain facts. The full signed range \(c\in[-1,1]\) additionally permits expressing certainty in a complement, an aspect absent from classical probabilistic models and closer to the uncertainty-theoretic treatment of~\cite{Liu}. Finally, lifting the single-positor restriction opens a \emph{multi-source} (multi-tenant) model in which competing beliefs from different actors coexist, are queryable independently, and are resolved only at query time.
+
 \section{Comparison with RDF-based Formalisms}
 \label{Sec:rdf}
 \noindent
@@ -427,7 +444,7 @@ Distinctions between the time of an event and the time at which it is recorded h
 
 \noindent
 \textbf{Uncertainty and provenance.}
-\cite{BenjellounEtAl} introduces databases with uncertainty and lineage, with confidence values analogous to signed certainty and lineage analogous to positors, but without temporality. \cite{DyllaEtAl} extends the model with valid time but does not represent transitions in the opinions of sources over assertion time. Signed certainty is related to the belief degree of~\cite{Liu}, whose normality and duality axioms correspond to our non-contradiction and bounded properties, albeit with a symmetry around $0.5$ rather than $0$. Surveys of imprecision and uncertainty in database systems can be found in~\cite{Smets,Motro}.
+\cite{BenjellounEtAl} introduces databases with uncertainty and lineage, with confidence values analogous to signed certainty and lineage analogous to positors, but without temporality. \cite{DyllaEtAl} extends the model with valid time but does not represent transitions in the opinions of sources over assertion time. Signed certainty is related to the belief degree of~\cite{Liu}, whose normality and duality axioms correspond to our non-contradiction and bounded properties, albeit with a symmetry around $0.5$ rather than $0$. Readers from the Dempster-Shafer tradition will recognise structural parallels: over a two-element frame $\{v, \neg v\}$, the bounded property $c + d \in \{-1, 0, 1\}$ mirrors the Dempster-Shafer relationship between belief and plausibility ($\mathrm{Bel}(v) + \mathrm{Bel}(\neg v) \leq 1$, with equality when the mass of the full frame is zero), and $c = 0$ corresponds to total ignorance ($m(\{v, \neg v\}) = 1$). The key difference is that signed certainty is assigned per positor and may be asserted about any posit at any assertion time, whereas basic belief assignment is a static, source-global function over the power set of possibilities. Surveys of imprecision and uncertainty in database systems can be found in~\cite{Smets,Motro}.
 
 \noindent
 \textbf{Write-time vs.\ query-time conflict resolution.}
@@ -442,10 +459,22 @@ A central principle of this paper is that resolving conflicts at write time is l
 
 \section{Conclusion and Future Work}
 \noindent
-Transitional representation treats concurrency, uncertainty, and bitemporality as first-class aspects of a single representation construct: posits and assertions. The \emph{information in effect} procedure enables query-time conflict handling without destructive updates.
+Transitional representation treats concurrency, uncertainty, and bitemporality as first-class aspects of a single representation construct: posits and assertions. The \emph{information in effect} procedure enables query-time conflict handling without destructive updates. Deliberately, the formalism prescribes no fusion strategy: how competing assertions are ultimately reconciled --- whether by selecting the highest positive certainty, by credibility-weighted aggregation, by recency, or by any domain-specific policy --- remains a consumer decision made at query time and left entirely outside the representation layer. At that point the consumer receives the full information-in-effect slice: every surviving assertion with its positor identity, signed certainty, appearance time, and value. This makes all raw evidence available for any aggregation policy; no information has been pre-discarded.
 
 \noindent
 A reference implementation named Positorium~\cite{Positorium} demonstrates the viability of the approach. Positorium is an experimental database engine written in Rust~\cite{Matsakis} that stores data exclusively as posits---with no relational, document, or graph layer underneath. It exposes a domain-specific query language (Traqula) for defining roles, adding posits with times and certainties, and pattern-matching over appearance sets. The engine uses bitmap-backed indexes for set intersection, supports both in-memory and file-backed (SQLite) persistence with an integrity ledger, and provides an HTTP JSON endpoint (Axum/Tokio) for client access. The source code is publicly available under a dual Apache~2.0/MIT license.
+
+\noindent
+Positorium's query language, Traqula~\cite{Positorium}, uses a pattern syntax that mirrors the posit structure directly. As an illustrative example, the following query retrieves all positors with positive certainty about Archie's beard as it appeared up to Sunday 10:03 --- the final bitemporal slice from the worked example in Section~4:
+\begin{quote}
+\small\ttfamily
+search [\{(+s, ascertains), (+p, posit)\}, +c, *], \\
+\phantom{search~}[\{(archie, has beard)\}, +v, *] as of 'Sunday 10:03' \\
+where c > 0\% \\
+return s, v, c;
+\end{quote}
+\noindent
+The two joined patterns mirror the assertion/posit duality: the first navigates the assertion layer (binding positor \texttt{s} and certainty \texttt{c}), the second descends into the underlying posit (binding beard value \texttt{v}). The \texttt{as~of} clause enforces the appearance-time snapshot; \texttt{where c > 0\%} restricts to beliefs with positive certainty.
 
 \noindent
 Future work (deferred from the earlier draft) includes schema/model bootstrapping within the representation itself, identification under uncertainty, and constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information.
@@ -536,6 +565,12 @@ Tom Johnston.
 William Kent.
 \newblock A simple guide to five normal forms in relational database theory.
 \newblock \emph{Communications of the ACM}, 26(2):120--125, 1983.
+
+\bibitem{IPCC}
+Michael~D. Mastrandrea, Christopher~B. Field, Thomas~F. Stocker, Ottmar Edenhofer, Kristie~L. Ebi, David~J. Frame, Hermann Held, Elmar Kriegler, Katharine~J. Mach, Patrick~R. Matschoss, Gian-Kasper Plattner, Gary~W. Yohe, and Francis~W. Zwiers.
+\newblock Guidance note for lead authors of the IPCC fifth assessment report on consistent treatment of uncertainties.
+\newblock Intergovernmental Panel on Climate Change (IPCC), 2010.
+\newblock \url{https://www.ipcc.ch/pdf/supporting-material/uncertainty-guidance-note.pdf}
 
 \bibitem{Koubarakis}
 Manolis Koubarakis.
