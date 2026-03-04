@@ -4,7 +4,6 @@
 
 \author{Lars R\"onnb\"ack}
 
-\date{\footnotesize Initial rework --- 4 March 2026}
 
 \usepackage{graphicx}
   \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
@@ -172,7 +171,7 @@ p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:
 
 \subsection{A signed certainty scale}
 \noindent
-Humans often communicate confidence linguistically rather than numerically. Table~\ref{Table:certainties2} suggests a coarse mapping.
+Humans often communicate confidence linguistically rather than numerically. Table~\ref{Table:certainties2} suggests a coarse mapping\footnote{Any mapping of natural-language hedges to numerical probabilities is inherently subjective. The values here serve as a pragmatic baseline; practitioners may calibrate them for their domain. Analogous scales appear in intelligence analysis~\cite{Kent} and in the IPCC uncertainty vocabulary~\cite{IPCC}.}. 
 
 \begin{table}[htb]
 \centering
@@ -191,7 +190,7 @@ $-0.75$  & It is probable that the value is not $v$ \\
 $-1.00$  & It is certain that the value is not $v$ \\
 \bottomrule
 \end{tabular}
-\caption{Suggested signed certainty values and linguistic correspondences.\footnote{Any mapping of natural-language hedges to numerical probabilities is inherently subjective. The values here serve as a pragmatic baseline; practitioners may calibrate them for their domain. Analogous scales appear in intelligence analysis~\cite{Kent} and in the IPCC uncertainty vocabulary~\cite{IPCC}.}}
+\caption{Suggested signed certainty values and linguistic correspondences.}
 \label{Table:certainties2}
 \end{table}
 
