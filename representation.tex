@@ -104,6 +104,12 @@ The accused, Archie, was seen fleeing the scene of the crime by two witnesses, D
 \deffy{def. of an appearance and a role}{%
 An \emph{appearance} is a pair \((i, r)\) where the first element is a unique identifier and the second a string called \emph{role}.}{appearance}
 
+\noindent
+\textbf{Note on identifiers.} Identifiers are opaque tokens: the formalism receives them as the \emph{outcome} of an identification process that operates entirely outside the representation layer. Identification is a search process by which circumstances are matched against available data, ending in one of two outcomes: an identity is established or it is not. What those circumstances are may vary widely --- from a reproducible customer-number lookup to an open-ended detective investigation. When the process is so reproducible that the same circumstances always produce the same result, those circumstances constitute a \emph{key}. Keys are useful automation aids for the identification process, but they must never affect the representation model itself: a model that encodes a particular identification process would reflect a single point of view, be bound to the time frame in which that process is valid, and risk obsolescence when the process changes.
+
+\noindent
+Identifiers are, however, the one element that positors must share to be in genuine conflict---two positors can only disagree if their assertions reference the same appearance set, which requires agreed-upon referents. Everything else concerning an entity remains expressible \emph{within} the formalism as ordinary posits with reserved roles: classification (``J42 is a person since 1980-02-13''), class transitions (``J42 is a female child'' until ``J42 is a female adult''), and even conflicting co-reference hypotheses (``J42 and K99 refer to the same individual'', asserted with some certainty by one positor and disputed by another) are all posits subject to the usual assertion mechanics.
+
 \deffy{def. of an appearance set}{%
 An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of appearances where any role \(r_i\) may only appear once.}{appearanceset}
 
@@ -477,7 +483,7 @@ return s, v, c;
 The two joined patterns mirror the assertion/posit duality: the first navigates the assertion layer (binding positor \texttt{s} and certainty \texttt{c}), the second descends into the underlying posit (binding beard value \texttt{v}). The \texttt{as~of} clause enforces the appearance-time snapshot; \texttt{where c > 0\%} restricts to beliefs with positive certainty.
 
 \noindent
-Future work (deferred from the earlier draft) includes schema/model bootstrapping within the representation itself, identification under uncertainty, and constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information.
+Future work (deferred from the earlier draft) includes schema/model bootstrapping within the representation itself and constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information. Identification --- the process of establishing which identifier to use --- is deliberately outside the representation layer and will be treated in a separate companion paper.
 
 \begin{thebibliography}{99}
 

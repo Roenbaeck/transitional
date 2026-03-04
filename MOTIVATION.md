@@ -440,3 +440,22 @@ Conclusions
 Hopefully I have not made time all too confusing compared to the post of Christian that inspired me. I do believe that time in databases is a complex matter, but that should be digestible for everyone, given that we can put ourselves on some common ground. All the different terminology and poor implementations out there definitely does not help.
 
 It's time to treat time more seriously.
+
+----
+
+Identification, identity, and key
+
+ Lars Rönnbäck
+Lars Rönnbäck
+
+Ardent data dissector | AI-assisted author | Open source adherent
+
+
+April 4, 2020
+Since we have started to recognize "keys" in our information modeling tool (from version 0.99.4) I will have this timely discussion on identification and identity. Looking at my previously published articles and papers, I have repeatedly stated that identification is a search process by which circumstances are matched against available data, ending in one of two outcomes: an identity is established or not. What these circumstances are and which available data you have may vary wildly, even if the intent of the search is the same. Think of a detective who needs to find the perpetrator of a crime. There may have been strange blotches of a blue substance at the crime scene, but no available register to match blue blotches of unknown origin to. We have circumstances but little available data, yet often detectives put someone behind bars nevertheless.
+
+On the other hand, think of a data integrator working with a data warehouse. The circumstance is a customer number and you have a neat and tidy Customer concept with all available data in your data warehouse. The difference to the detective is the closeness of agreement between different runs of the identification process. The process will look very much the same for the next customer number, and the next, and the next. So much so that the circumstance itself may warrant its own classification, namely being a "key" circumstance. In other words, a "key" is when circumstances exist that every time produce an identical search process against well defined and readily available data. As such, a "key" does not in any way imply that it is the only way to identify something, that it is independent of which time frame you are looking at it, or that it cannot be replaced at some point.
+
+These are the reasons why, in Anchor and Transitional modeling, no importance has been given to keys. Keys cannot affect a model, because if they did, the model itself would reflect a single point of view, be bound to a time frame, and run the risk of becoming obsolete. That being said, if a process is close to perfectly reproducible, it would be stupid not to take advantage of that fact and help automate it. This is where the concept of a "key" is useful, even in Anchor and Transitional modeling, which is why we are now adding it as an informational visualization with the intent of also creating some convenient functionality surrounding them. Even so, regardless of which keys you add to the model, the model is always unaffected by these, precisely for the reasons discussed above.
+
+I hope this clarifies my stance on keys. They are convenient for automation purposes, since they help the identification process, but shall never affect the model upon which they work in any way.
