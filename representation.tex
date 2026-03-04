@@ -1,48 +1,16 @@
-\documentclass[11pt]{article}
+\documentclass[a4paper,fleqn]{cas-sc}
 
-\title{Transitional Representation: \\A Formalism for Conflicting and Evolving Data}
-
-\author{Lars R\"onnb\"ack}
-
-
-\usepackage{graphicx}
-  \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
-  \graphicspath{{./}{graphics/}}
-
+\usepackage[numbers]{natbib}
 \usepackage{amsmath,amssymb,mathtools}
 \usepackage{booktabs}
 \usepackage{enumitem}
-
-\usepackage{geometry}
-\geometry{
-  paperwidth=148mm,
-  paperheight=210mm,
-  left=15mm,
-  right=3mm,
-  top=10mm,
-  bottom=15mm,
-  marginparsep=6mm,
-  marginparwidth=35mm,
-  includemp,
-  includehead,
-}
-
-% Bibliography is embedded directly in this file to avoid BibTeX/Biber dependencies.
+\usepackage{graphicx}
+  \graphicspath{{./}{graphics/}}
 \usepackage{url}
-
-% Standardize command font styles and environments
-\newcommand{\doccmd}[1]{\texttt{\textbackslash#1}}
-\newcommand{\docopt}[1]{\ensuremath{\langle}\textrm{\textit{#1}}\ensuremath{\rangle}}
-\newcommand{\docarg}[1]{\textrm{\textit{#1}}}
-\newcommand{\docenv}[1]{\textsf{#1}}
-\newcommand{\docpkg}[1]{\texttt{#1}}
-\newcommand{\doccls}[1]{\texttt{#1}}
-\newcommand{\docclsopt}[1]{\texttt{#1}}
-\newenvironment{docspec}{\begin{quote}\noindent}{\end{quote}}
 
 %%%%%%%%%%%%%%%%%%%%%%%% DEFINITIONS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand{\assert}{\mathbin{\text{!}}}
+\newcommand{\asrt}{\mathbin{\text{!}}}
 \newcommand{\typeof}[1]{\tau(#1)}
 \newcommand{\abs}[1]{\left|#1\right|}
 
@@ -71,16 +39,33 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
 
-\maketitle
+\shorttitle{Transitional Representation}
+\shortauthors{L. R\"onnb\"ack}
+
+\title[mode=title]{Transitional Representation: A Formalism for Conflicting and Evolving Data}
+\tnotemark[1]
+\tnotetext[1]{Initial rework --- 4 March 2026.}
+
+\author[1]{Lars R\"onnb\"ack}
+\cormark[1]
+\ead{lars@anchormodeling.com}
+\affiliation[1]{organization={Anchor Modeling},
+                country={Sweden}}
+\cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-\noindent
 Modern information systems increasingly need to represent information that is concurrent (multiple sources and perspectives), bitemporal (what was believed when, about what happened when), and uncertain (graded confidence and explicit disagreement). Existing representation formalisms typically handle at most one or two of these dimensions without either losing provenance or forcing early conflict resolution. This paper proposes \emph{transitional representation}, a formalism whose atomic units are \emph{posits} (\(n\)-ary, time-stamped statements) and \emph{assertions} (time-stamped, signed certainties about posits). We further give a deterministic bitemporal selection procedure (\emph{information in effect}) that defers conflict resolution to query time while retaining full history.
-\vskip6pt
-\noindent\textsc{\footnotesize Keywords}\\
-\noindent transitional, representation, posit, assertion, bitemporality, concurrency, reliability, uncertainty
 \end{abstract}
+
+\begin{keywords}
+transitional \sep posit \sep assertion \sep bitemporality \sep concurrency \sep uncertainty
+\end{keywords}
+
+\maketitle
 
 \section{Introduction}
 \noindent\textbf{The problem} is not that databases cannot store facts, but that they routinely discard the circumstances of those facts: who stated them, how confident they were, when the statement was recorded, and how both the world and opinions about it change over time. Modeling these requirements explicitly in conventional designs is complex and therefore often omitted, producing lossy implementations and lost provenance \cite{GolfarelliRizzi}. Yet in practice, statements have origins and degrees of confidence \cite{Liu}, and many domains require full auditability and non-destructive history (e.g., regulated finance, clinical records, intelligence and judicial applications) \cite{FisherEtAl}.
@@ -145,7 +130,7 @@ $$\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T_{\math
 where \(p_{id}\) identifies the posit being asserted, \(s_{id}\) identifies the \emph{positor}, \(T_{\mathrm{ast}}\in\mathbb{T}\) is \emph{assertion time}, and \(c\in[-1,1]\) is \emph{signed certainty}.}{assertion}
 
 \noindent
-We write this compactly as \(\assert(s_{id}, p_{id}, c, T_{\mathrm{ast}})\).
+We write this compactly as \(\asrt(s_{id}, p_{id}, c, T_{\mathrm{ast}})\).
 
 \noindent
 Representing assertions as posits is deliberate: because an assertion is itself a posit, it can in turn be asserted by another positor, enabling recursive layers of meta-commentary—uncertainty about uncertainty, provenance of provenance—within the same uniform construct and without any change of representation.
@@ -161,8 +146,8 @@ In the running example, let:
 \begin{alignat*}{3}
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}] \\
 p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:02}] \\
-\assert(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-\assert(D, p_{2},\;&& 1.0,\;&& \textrm{Friday})
+\asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
+\asrt(D, p_{2},\;&& 1.0,\;&& \textrm{Friday})
 \end{alignat*}
 
 \section{Epistemic Properties of the Model}
@@ -194,9 +179,9 @@ $-1.00$  & It is certain that the value is not $v$ \\
 \label{Table:certainties2}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[pos=htbp]
 \centering
-\includegraphics[width=0.7\linewidth]{v_and_not_v.pdf}
+\includegraphics[width=0.25\linewidth]{v_and_not_v.pdf}
 \caption{Signed certainty for a value $v$ and its negation \emph{not} $v$.}
 \label{Figure:boundsym}
 \end{figure}
@@ -209,7 +194,7 @@ A \emph{body of information} is a set of assertion posits that represent actual 
 A body of information is \emph{well-behaving} when its assertions satisfy a set of mutually reinforcing properties. The first ensures that negated values and negative certainties are interchangeable:
 
 \deffy{def. of symmetric}{%
-A body of information is said to be \emph{symmetric} iff the assertions \(\assert(S, p, {-c}, T)\) and \(\assert(S, \bar{p}, c, T)\) are equivalent for a posit \(p\) and its complement \(\bar{p}\).}{symmetry}
+A body of information is said to be \emph{symmetric} iff the assertions \(\asrt(S, p, {-c}, T)\) and \(\asrt(S, \bar{p}, c, T)\) are equivalent for a posit \(p\) and its complement \(\bar{p}\).}{symmetry}
 
 \noindent
 Symmetry allows a positor to express ``certainly not fluffy red'' either as certainty \(-1\) for \(p\!=\)[\ldots, \textit{fluffy red}, \ldots] or as certainty \(1\) for \(\bar{p}\!=\)[\ldots, \textit{not fluffy red}, \ldots]. To avoid storing complemented values, any symmetrical body can be normalized:
@@ -221,7 +206,7 @@ A body of information is said to be \emph{canonical} iff all assertions are made
 The next property bounds the certainties for a value and its complement so they cannot independently saturate the scale:
 
 \deffy{def. of bounded}{%
-A body of information is said to be \emph{bounded} iff the certainties in the assertions \(\assert(S, p, c, T)\) and \(\assert(S, \bar{p}, d, T)\) satisfy \(\abs{c + d} = \abs{c + d}^2\), i.e.\ \(c + d \in \{-1, 0, 1\}\).}{boundary}
+A body of information is said to be \emph{bounded} iff the certainties in the assertions \(\asrt(S, p, c, T)\) and \(\asrt(S, \bar{p}, d, T)\) satisfy \(\abs{c + d} = \abs{c + d}^2\), i.e.\ \(c + d \in \{-1, 0, 1\}\).}{boundary}
 
 \noindent
 For example, if Charlie asserts \(c = 0.75\) for ``fluffy red'', boundary implies \(d = 0.25\) for ``not fluffy red''. The symmetry and bounded conditions on the certainty scale are illustrated in Figure~\ref{Figure:boundsym}. The next property prevents a positor from simultaneously holding two different certainties for the very same posit:
@@ -262,7 +247,7 @@ Requiring this total not to exceed~1 prevents the positor from collectively over
 
 \noindent
 \textsc{Example.} Suppose Donna has two assertions simultaneously in effect at \((\textrm{Sunday}, \textrm{10:03})\):
-\[a_5 = \assert(D,\,p_4,\;0.25,\;\textrm{Sunday})\quad\text{and}\quad a_6 = \assert(D,\,p_2,\;{-0.75},\;\textrm{Sunday})\]
+\[a_5 = \asrt(D,\,p_4,\;0.25,\;\textrm{Sunday})\quad\text{and}\quad a_6 = \asrt(D,\,p_2,\;{-0.75},\;\textrm{Sunday})\]
 (``possibly fluffy red'' and ``probably not shaved clean''). One certainty is negative ($-0.75$), and the sum is $0.25 + (-0.75) = -0.5$, so the left-hand side equals $1 + (-0.5) = 0.5 \leq 1$. Donna is well within bounds and is not contradicting herself. Note that a positor may simultaneously assert \(c=-1\) (``certainly not'') for an unlimited number of posits without ever violating the inequality.
 
 \noindent
@@ -310,9 +295,9 @@ In less formal terms, first rewind to assertions not after \((T_@, t_@)\); then 
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}]  \\
 p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:02}]  \\
 p_{3} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:00}]  \\
-a_1 = \assert(D, p_{2},\;&& 1.0,\;&& \textrm{Friday}) \\
-a_2 = \assert(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_3 = \assert(C, p_{3},\;&& -1.0,\;&& \textrm{Friday})
+a_1 = \asrt(D, p_{2},\;&& 1.0,\;&& \textrm{Friday}) \\
+a_2 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
+a_3 = \asrt(C, p_{3},\;&& -1.0,\;&& \textrm{Friday})
 \end{alignat*}
 
 \noindent
@@ -322,8 +307,8 @@ With \(\mathbb{A}=\{a_1,a_2,a_3\}\), the information in effect at \((\textrm{Sat
 Now suppose Bella wakes up on Sunday and Donna retracts her earlier certainty while tentatively aligning with Charlie:
 \begin{alignat*}{3}
 p_{4} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:02}] \\
-a_4 = \assert(D, p_{2},\;&& 0.0,\;&& \textrm{Sunday}) \\
-a_5 = \assert(D, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
+a_4 = \asrt(D, p_{2},\;&& 0.0,\;&& \textrm{Sunday}) \\
+a_5 = \asrt(D, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
 \end{alignat*}
 
 \noindent
@@ -334,17 +319,17 @@ With \(\mathbb{A}'=\mathbb{A}\cup\{a_4,a_5\}\), the information in effect at \((
 If two successive assertions in assertion time are otherwise equal, the later is a \emph{reassertion} of the earlier.}{reassertion}
 
 \deffy{def. of a restatement}{%
-For two assertions, \(\assert(S, p, c, T)\) and \(\assert(S, p', c, T)\), with \(p=[D,v,t_{\mathrm{app}}]\) and \(p'=[D,v,t'_{\mathrm{app}}]\) such that \(t_{\mathrm{app}} < t'_{\mathrm{app}}\), the latter is a \emph{restatement} of the former.}{restatement}
+For two assertions, \(\asrt(S, p, c, T)\) and \(\asrt(S, p', c, T)\), with \(p=[D,v,t_{\mathrm{app}}]\) and \(p'=[D,v,t'_{\mathrm{app}}]\) such that \(t_{\mathrm{app}} < t'_{\mathrm{app}}\), the latter is a \emph{restatement} of the former.}{restatement}
 
 \noindent
 \textsc{Example (reassertion vs. restatement).} Let Charlie initially claim ``fluffy red'' at 10:00 with high confidence, then repeat the same claim on a later day (reassertion), and also apply the same confidence to the later appearance-time posit (restatement). Finally, Charlie downgrades confidence for the later appearance-time posit:
 \begin{alignat*}{3}
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}]  \\
 p_{4} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:02}] \\
-a_2 = \assert(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_7 = \assert(C, p_{4},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_8 = \assert(C, p_{1},\;&& 0.75,\;&& \textrm{Sunday}) \\
-a_9 = \assert(C, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
+a_2 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
+a_7 = \asrt(C, p_{4},\;&& 0.75,\;&& \textrm{Friday}) \\
+a_8 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Sunday}) \\
+a_9 = \asrt(C, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
 \end{alignat*}
 Here, \(a_8\) is a reassertion of \(a_2\) (only assertion time changes). Also, \(a_7\) is a restatement of \(a_2\) (same assertion time and value, later appearance time). The pair \(a_7\) and \(a_9\) illustrates belief revision without erasing history.
 
@@ -465,7 +450,7 @@ A central principle of this paper is that resolving conflicts at write time is l
 
 \section{Conclusion and Future Work}
 \noindent
-Transitional representation treats concurrency, uncertainty, and bitemporality as first-class aspects of a single representation construct: posits and assertions. The \emph{information in effect} procedure enables query-time conflict handling without destructive updates. Deliberately, the formalism prescribes no fusion strategy: how competing assertions are ultimately reconciled --- whether by selecting the highest positive certainty, by credibility-weighted aggregation, by recency, or by any domain-specific policy --- remains a consumer decision made at query time and left entirely outside the representation layer. At that point the consumer receives the full information-in-effect slice: every surviving assertion with its positor identity, signed certainty, appearance time, and value. This makes all raw evidence available for any aggregation policy; no information has been pre-discarded. To illustrate: if the information in effect at \((\textrm{Sunday},\,10{:}03)\) contains \(\assert(C, p_1, 0.75, \textrm{Friday})\) and \(\assert(D, p_3, -1.0, \textrm{Friday})\) for the appearance set \(\{(A,\textit{has beard})\}\), a \emph{max-certainty} policy selects Charlie's value (highest positive certainty); a \emph{recency-biased} policy may weight Bella's later corroboration more heavily once \(a_5\) arrives; an \emph{agreement-seeking} policy might flag the appearance set as contested and decline to surface any single value. All three are valid consumer choices over the same unmodified slice.
+Transitional representation treats concurrency, uncertainty, and bitemporality as first-class aspects of a single representation construct: posits and assertions. The \emph{information in effect} procedure enables query-time conflict handling without destructive updates. Deliberately, the formalism prescribes no fusion strategy: how competing assertions are ultimately reconciled --- whether by selecting the highest positive certainty, by credibility-weighted aggregation, by recency, or by any domain-specific policy --- remains a consumer decision made at query time and left entirely outside the representation layer. At that point the consumer receives the full information-in-effect slice: every surviving assertion with its positor identity, signed certainty, appearance time, and value. This makes all raw evidence available for any aggregation policy; no information has been pre-discarded. To illustrate: if the information in effect at \((\textrm{Sunday},\,10{:}03)\) contains \(\asrt(C, p_1, 0.75, \textrm{Friday})\) and \(\asrt(D, p_3, -1.0, \textrm{Friday})\) for the appearance set \(\{(A,\textit{has beard})\}\), a \emph{max-certainty} policy selects Charlie's value (highest positive certainty); a \emph{recency-biased} policy may weight Bella's later corroboration more heavily once \(a_5\) arrives; an \emph{agreement-seeking} policy might flag the appearance set as contested and decline to surface any single value. All three are valid consumer choices over the same unmodified slice.
 
 \noindent
 A reference implementation named Positorium~\cite{Positorium} demonstrates the viability of the approach. Positorium is an experimental database engine written in Rust~\cite{Matsakis} that stores data exclusively as posits---with no relational, document, or graph layer underneath. It exposes a domain-specific query language (Traqula) for defining roles, adding posits with times and certainties, and pattern-matching over appearance sets. The engine uses bitmap-backed indexes for set intersection, supports both in-memory and file-backed (SQLite) persistence with an integrity ledger, and provides an HTTP JSON endpoint (Axum/Tokio) for client access. The source code is publicly available under a dual Apache~2.0/MIT license.
