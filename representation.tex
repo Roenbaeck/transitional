@@ -98,7 +98,7 @@ Identifiers are, however, the one element that positors must share to be in genu
 An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of appearances where any role \(r_i\) may only appear once.}{appearanceset}
 
 \deffy{def. of a posit}{%
-A \emph{posit} is a triple, \(\left[D, v, t_{\mathrm{app}}\right]\), where the first element is an appearance set, the second a data value, and the third a time point. The domain \(\mathbb{t}\) from which time points are taken is called \emph{appearance time}.}{posit}
+A \emph{posit}~\cite{Oxford} is a triple, \(\left[D, v, t_{\mathrm{app}}\right]\), where the first element is an appearance set, the second a data value, and the third a time point. The domain \(\mathbb{t}\) from which time points are taken is called \emph{appearance time}.}{posit}
 
 \noindent
 \textbf{Interpretation.} A posit states that an appearance set \(D\) has value \(v\) from (and including) appearance time \(t_{\mathrm{app}}\) onward, until another posit with the same appearance set becomes applicable. Appearance sets are permanent anchors of change: they remain in the body of information indefinitely, even after the entities they reference no longer exist, because history must remain queryable.
@@ -387,7 +387,7 @@ The embedded triple $\langle\!\langle A\;\texttt{ex:hasBeard}\;\textit{fluffy re
 
 \subsection{The temporal gap: bitemporality}
 \noindent
-OWL-Time~\cite{OWLTime} provides a rich ontology of temporal instants, intervals, and Allen's calculus of ordering relations; it is well suited to representing when a state holds in the world (\emph{appearance time}, or valid time in database terminology). The W3C specification explicitly notes, however, that the ``valid time'' requirement is not resolved directly: only a user-defined specialisation of \texttt{time:hasTime} is suggested for that purpose~\cite{OWLTime}. More critically, OWL-Time has no concept of \emph{when a source's belief about a state was recorded or revised}. Assertion time---the second temporal axis of transitional representation---has no representation in OWL-Time or in any standard RDF vocabulary.
+OWL-Time~\cite{OWLTime} provides a rich ontology of temporal instants, intervals, and Allen's calculus of ordering relations~\cite{Allen}; it is well suited to representing when a state holds in the world (\emph{appearance time}, or valid time in database terminology). The W3C specification explicitly notes, however, that the ``valid time'' requirement is not resolved directly: only a user-defined specialisation of \texttt{time:hasTime} is suggested for that purpose~\cite{OWLTime}. More critically, OWL-Time has no concept of \emph{when a source's belief about a state was recorded or revised}. Assertion time---the second temporal axis of transitional representation---has no representation in OWL-Time or in any standard RDF vocabulary.
 
 \noindent
 In practice, systems requiring both temporal axes must layer custom ``valid-from / transaction-time'' conventions on top of RDF. Such conventions are application-specific, making federated queries over bitemporal history non-portable across systems. Transitional representation builds both axes into the primary constructs: appearance time is part of every posit; assertion time is part of every assertion.
@@ -404,7 +404,10 @@ Transitional representation defers resolution explicitly. The \emph{information 
 A structural property of transitional representation is that assertions are themselves posits: the same constructs apply recursively. Annotating an assertion therefore uses the same mechanism as annotating any first-order fact. In RDF-star, annotating an annotation requires nesting embedded triples, $\langle\!\langle\langle\!\langle s\;p\;o\rangle\!\rangle\; q\; r\rangle\!\rangle\;\ldots$, and the RDF-star specification itself cautions that deeply nested annotations become difficult to manage. Classic reification-of-a-reification is even more verbose. Neither the RDF data model nor SPARQL provides a standard construct for the multi-level bitemporal patterns that transitional representation expresses with the same three selection criteria at every recursion depth.
 
 \subsection*{Summary}
-\begin{table}[htb]
+\noindent
+Table~\ref{Table:rdfcomparison} summarises the four design dimensions discussed above across the main RDF annotation mechanisms and transitional representation.
+
+\begin{table}[pos=htbp]
 \centering
 \small
 \begin{tabular}{l c c c c}
@@ -482,40 +485,15 @@ Lars Ronnback.
 \newblock \emph{Anchor Modeling}.
 \newblock 2005. \url{http://www.anchormodeling.com/}. Accessed 2018-07-11.
 
-\bibitem{Ayer}
-Alfred Ayer.
-\newblock Language, Truth, and Logic.
-\newblock \emph{London: V. Gollancz ltd}, 1936.
-
 \bibitem{BenjellounEtAl}
 Omar Benjelloun, Anish Das Sarma, Alon Halevy, Martin Theobald, and Jennifer Widom.
 \newblock Databases with uncertainty and lineage.
 \newblock \emph{The VLDB Journal---The International Journal on Very Large Data Bases}, 17(2):243--264, 2008.
 
-\bibitem{Black}
-Max Black.
-\newblock The identity of indiscernibles.
-\newblock \emph{Mind}, 61(242):153--164, 1952.
-
-\bibitem{Bradley}
-Francis Herbert Bradley.
-\newblock \emph{Appearance and Reality: A Metaphysical Essay}.
-\newblock Routledge, 2016.
-
-\bibitem{Chisholm}
-Roderick Chisholm and others.
-\newblock \emph{Person and Object: A Metaphysical Study}.
-\newblock Routledge, 2014.
-
 \bibitem{Codd}
 Edgar F. Codd.
 \newblock A relational model of data for large shared data banks.
 \newblock \emph{Communications of the ACM}, 13(6):377--387, 1970.
-
-\bibitem{CummingEtAl}
-Graeme S. Cumming and John Collier.
-\newblock Change and identity in complex systems.
-\newblock \emph{Ecology and Society}, 10(1), 2005.
 
 \bibitem{DyllaEtAl}
 Maximilian Dylla, Iris Miliaraki, and Martin Theobald.
@@ -532,20 +510,10 @@ Matteo Golfarelli and Stefano Rizzi.
 \newblock A survey on temporal data warehousing.
 \newblock \emph{International Journal of Data Warehousing and Mining (IJDWM)}, 5(1):1--17, 2009.
 
-\bibitem{Hartmann}
-Sven Hartmann.
-\newblock On the implication problem for cardinality constraints and functional dependencies.
-\newblock \emph{Annals of Mathematics and Artificial Intelligence}, 33(2--4):253--307, 2001.
-
 \bibitem{Hultgren}
 Hans Hultgren.
 \newblock \emph{Modeling the Agile Data Warehouse with Data Vault}.
 \newblock New Hamilton, 2012.
-
-\bibitem{Inmon}
-William H. Inmon.
-\newblock \emph{Building the Data Warehouse}.
-\newblock John Wiley \& Sons, 2005.
 
 \bibitem{Johnston}
 Tom Johnston.
@@ -562,12 +530,6 @@ Michael~D. Mastrandrea, Christopher~B. Field, Thomas~F. Stocker, Ottmar Edenhofe
 \newblock Guidance note for lead authors of the IPCC fifth assessment report on consistent treatment of uncertainties.
 \newblock Intergovernmental Panel on Climate Change (IPCC), 2010.
 \newblock \url{https://www.ipcc.ch/pdf/supporting-material/uncertainty-guidance-note.pdf}
-
-\bibitem{Koubarakis}
-Manolis Koubarakis.
-\newblock Representation and querying in temporal databases: the power of temporal constraints.
-\newblock In \emph{Data Engineering, 1993. Proceedings. Ninth International Conference on}, pages 327--334.
-  IEEE, 1993.
 
 \bibitem{LinEtAl}
 Jinxin Lin and Alberto O. Mendelzon.
@@ -589,21 +551,10 @@ Zhun-ga Liu, Quan Pan, Yong-mei Cheng, and Jean Dezert.
 \newblock Sequential adaptive combination of unreliable sources of evidence.
 \newblock \emph{Advances and Applications of DSmT for Information Fusion}, 2:23, 2015.
 
-\bibitem{Lombard}
-Lawrence Brian Lombard.
-\newblock Relational change and relational changes.
-\newblock \emph{Philosophical Studies}, 34(1):63--79, 1978.
-
 \bibitem{MassaroEtAl}
 Dominic W. Massaro and Daniel Friedman.
 \newblock Models of integration given multiple sources of information.
 \newblock \emph{Psychological Review}, 97(2):225, 1990.
-
-\bibitem{McBrienEtAl}
-Peter McBrien and Alexandra Poulovassilis.
-\newblock Schema evolution in heterogeneous database architectures, a schema transformation approach.
-\newblock In \emph{International Conference on Advanced Information Systems Engineering}, pages 484--499.
-  Springer, 2002.
 
 \bibitem{MoensSteedman}
 Marc Moens and Mark Steedman.
@@ -615,11 +566,6 @@ Amihai Motro.
 \newblock Imprecision and uncertainty in database systems.
 \newblock In \emph{Fuzziness in Database Management Systems}, pages 3--22.
   Springer, 1995.
-
-\bibitem{NoyEtAl}
-Natalya F. Noy and Michel Klein.
-\newblock Ontology evolution: Not the same as schema evolution.
-\newblock \emph{Knowledge and Information Systems}, 6(4):428--440, 2004.
 
 \bibitem{Oxford}
 Oxford University Press.
@@ -636,11 +582,6 @@ W3C RDF Working Group.
 \newblock \emph{Resource Description Framework}.
 \newblock 2004. \url{http://www.w3.org/RDF/}. Accessed 2018-07-11.
 
-\bibitem{Ramsey}
-Frank Ramsey.
-\newblock Truth and Probability.
-\newblock \emph{Studies in Subjective Probability}, pages 25--52, 1926.
-
 \bibitem{Reichenbach}
 Hans Reichenbach.
 \newblock The tenses of verbs.
@@ -650,11 +591,6 @@ Hans Reichenbach.
 Lars Ronnback, Olle Regardt, Maria Bergholtz, Paul Johannesson, and Petia Wohed.
 \newblock Anchor modeling---Agile information modeling in evolving data environments.
 \newblock \emph{Data \& Knowledge Engineering}, 69(12):1229--1253, 2010.
-
-\bibitem{Sider}
-Theodore Sider.
-\newblock Quantifiers and temporal ontology.
-\newblock \emph{Mind}, 115(457):75--97, 2006.
 
 \bibitem{Smets}
 Philippe Smets.
@@ -676,11 +612,6 @@ Richard Snodgrass and Ilsoo Ahn.
 Krishna Kulkarni and Jan-Eike Michels.
 \newblock Temporal features in SQL: 2011.
 \newblock \emph{ACM Sigmod Record}, 41(3):34--43, 2012.
-
-\bibitem{Thalheim}
-Bernhard Thalheim.
-\newblock The art of conceptual modelling.
-\newblock \emph{Information Modelling and Knowledge Bases XXII. Frontiers in Artificial Intelligence and Applications}, 237:149--168, 2012.
 
 \bibitem{Matsakis}
 Nicholas D. Matsakis and Felix S. Klock II.
