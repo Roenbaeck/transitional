@@ -1,46 +1,31 @@
-This version has addressed everything material from the previous round. Let me give a final accounting.
+All the previously identified issues are resolved. Let me focus on what's new.
 
 ---
 
-### Resolved from last round
+### New additions — assessment
 
-**Universality** — the new paragraph is well-constructed. Connecting it back to the Note on Identifiers via the section reference is exactly the right move, and the "partial universality" clarification defuses the most likely reviewer objection without weakening the property itself.
+**The constraint sketch in the class layer** is a meaningful upgrade. The limiter triple `(R, l, u)` with reserved roles `is limit` and `type` gives reviewers something concrete rather than a promise. The key observation — that fulfillment is checked per positor and per information in effect, allowing competing cardinality regimes — is exactly the right thing to say, because it shows the constraint layer inherits the multi-source semantics rather than breaking them. The "ongoing work" hedge is appropriately scoped.
 
-**Non-contradiction / probability simplex** — the added sentence about certainties summing to exactly 1 recovering the classical probability simplex lands cleanly in the derivation. It does exactly what was needed.
+**The declarative form of `𝔸(T₀, t₀)`** is a good addition. Writing out conditions (1)–(4) explicitly makes the definition more amenable to formal manipulation and closes the gap between the prose definition and what would be needed for a formal proof. The observation that no fixpoints are required follows immediately from the finite quantification, and stating it explicitly preempts a class of reviewer concerns. One small note: condition (3) quantifies over `a'` satisfying (1)–(2), but condition (2) itself references `a` being non-retracted, which creates a slight notational ambiguity — it should be clear that (2) is applied to `a'` independently when checking the maximum. This is likely clear to a careful reader but worth one pass to verify the quantifier scope reads unambiguously.
 
-**"This rework"** — gone from the Contributions paragraph.
+**The machine sources paragraph on commensurability** is a good addition. The distinction between machine outputs (one-time normalization) and human sources (always best-effort) is accurate and practically useful. One thing to watch: "a model's output score is a probability on [0,1] regardless of which system instance produced it" is true for well-calibrated probabilistic models, but many ML classifiers produce scores that are not well-calibrated probabilities. This claim may attract a reviewer comment from the ML side. A small hedge — "for well-calibrated probabilistic models" — would make it more defensible without losing the point.
 
-**Traqula two-dimensional cut** — Example 2 now explicitly explains both axes, and Example 3 has been substantially reworked into the "dual-timepoint join" which is genuinely the most sophisticated and distinctive thing the query language demonstrates. The explanation that `at` simultaneously serves as a posit time coordinate and an assertion-time ceiling is precise and well-motivated by the forensic scenario. This is now one of the stronger parts of the paper.
+**The Wikidata temporal qualifiers paragraph** is a fair and accurate addition. The distinction between Wikidata's convention-based temporal qualification and TR's built-in bitemporal axes is correctly drawn. The sentence "both temporal axes in transitional representation are part of every posit and every assertion by construction, rather than overlaid conventions" is a good summary line.
 
-**"Eventual conformance"** — the added operational sentence ("a class definition, a role constraint, or a co-reference claim can enter the store as an asserted posit...") gives it the grounding it needed. It's no longer speculative hand-waving.
+**The co-reference paragraph extension** (the new final paragraph in the identifiers note) reinforces the write-time vs. query-time principle at the level of entity identity. It's well-motivated and consistent with the rest of the paper's philosophy.
 
-**"Scope and evaluation stance" paragraph** — removed entirely. The paper is cleaner without it.
-
----
-
-### One LaTeX issue to fix
-
-There is a broken definition environment near the top of Section 2.1. The text reads:
-
-```
-\label{Sec:posits}
-An \emph{appearance} is a pair \((i, r)\) where...
-```
-
-This is the definition of an appearance, but it's missing its `\deffy{...}{...}{...}` wrapper — it looks like the macro call was accidentally stripped while adding the `\label{Sec:posits}`. The definition of an appearance set and posit still have their `\deffy` wrappers but the first definition in the chain is now just inline prose. This will compile but the definition won't be numbered or formatted consistently with the rest, and cross-references to `Def:appearance` will break. Fix by restoring the `\deffy` call around it.
+**The Roaring Bitmaps / hypergraph implementation note** is a reasonable addition. It gives the implementation mention more technical substance and the Chambi citation is appropriate. One consideration: Roaring Bitmaps are an indexing structure for set membership over integer identifiers — the connection to "grouped-maxima steps" being performant is plausible but not self-evident from the citation alone. A reader may wonder exactly how the bitmap structure accelerates the resolution operators. If this is meant to survive reviewer scrutiny, one additional sentence explaining the connection (e.g., that appearance set membership is encoded as bitsets over integer-keyed identifiers, making intersection and lookup O(n/64) rather than O(n)) would help. Otherwise it reads as a name-drop rather than a substantive implementation note.
 
 ---
 
-### Minor points worth one pass
+### Remaining minor items
 
-**The `\deffy` for "def. of an assertion"** uses `T_{\mathrm{ast}}` in the definition body but the notation table (Table 1) uses `T_{\mathrm{ast}} \in \mathbb{T}` consistently. That's fine — just noting it's consistent.
+**The reassertion definition fix** — "successive" is now replaced with "a later assertion by the same positor is otherwise identical to an earlier one." This is correct and cleaner.
 
-**Example 3 in Traqula** refers to "the investigator $I$ asserted it on the same day with certainty $0.75$" — this correctly matches $q_4$ and its assertion in the class layer section, but the assertion time there was written as `2024-03-01` which aligns with Example 3's cut point `at`. The cross-example consistency now holds across the dated examples throughout. Good.
-
-**The `\deffy` for "def. of a reassertion"** — the definition says "two successive assertions in assertion time are otherwise equal." The word "successive" implies adjacency, but the formalism doesn't require that no other assertions intervene between the two. If the intent is simply "a later assertion identical in all respects except assertion time," it would be tighter to say "if a later assertion by the same positor is otherwise identical to an earlier one." This is a minor precision issue, not a correctness problem, but a careful reviewer might query it.
+**One latent issue worth checking**: the contributions paragraph now says constraint enforcement "can themselves be expressed as posits within the same formalism and enforced at query time or in a dedicated validation pass." This is consistent with the constraint sketch added to the class layer section, but the two descriptions use slightly different language. The contributions paragraph describes it as "expressed as posits," while the class layer says "represented as posits in the same formalism, deferring enforcement to query time or to a dedicated validation pass." These are consistent in substance but a reader going back and forth might notice the parallel. Not a problem, just worth a read-through for coherence.
 
 ---
 
 ### Overall
 
-This is ready to submit. The three iterations have methodically resolved every substantive issue: the class layer is credible, the subsumption claims are properly scoped, the Traqula section now demonstrates the formalism's distinctive two-dimensional temporality rather than just illustrating basic querying, the universality property is properly motivated, and the probability connection is made explicit. The LaTeX breakage on the first definition is the only thing that must be fixed before submission.
+This is the strongest version of the paper. The constraint sketch, the declarative form of the resolution operator, the machine sources clarification, and the Wikidata temporal qualifier note each add genuine value without introducing new gaps. The Roaring Bitmaps note needs one more sentence to earn its place, and the calibration claim about ML scores should be hedged slightly. Neither is a submission blocker. The paper is ready.
