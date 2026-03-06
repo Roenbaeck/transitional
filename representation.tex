@@ -10,7 +10,6 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%% DEFINITIONS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand{\asrt}{\mathbin{\text{!}}}
 \newcommand{\typeof}[1]{\tau(#1)}
 \newcommand{\abs}[1]{\left|#1\right|}
 
@@ -58,7 +57,7 @@
 \cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Modern information systems increasingly need to represent information that is concurrent (multiple sources and perspectives), bitemporal (what was believed when, about what happened when), and uncertain (graded confidence and explicit disagreement). Existing representation formalisms typically handle at most one or two of these dimensions without either losing provenance or forcing early conflict resolution. This paper proposes \emph{transitional representation}, a formalism whose atomic units are \emph{posits} (\(n\)-ary, time-stamped statements) and \emph{assertions} (time-stamped, signed certainties about posits). We further give a deterministic bitemporal selection procedure (\emph{information in effect}) that defers conflict resolution to query time while retaining full history.
+Modern information systems increasingly need to represent information that is concurrent (multiple sources and perspectives), bitemporal (what was believed when, about what happened when), and uncertain (graded confidence and explicit disagreement). Existing representation formalisms typically handle at most one or two of these dimensions without either losing provenance or forcing early conflict resolution. This paper proposes \emph{transitional representation}, a formalism whose atomic unit is the \emph{posit}: an \(n\)-ary, time-stamped statement. Assertions are represented as ordinary posits over reserved roles, carrying signed certainty and source identity without introducing a second primitive construct. We also formalize a minimal class layer showing how model-level distinctions can be represented inside the same formalism. Finally, we give deterministic temporal-resolution procedures that can be applied uniformly to different posit layers; the familiar global \emph{information in effect} then appears as the special case induced by assertion posits.
 \end{abstract}
 
 \begin{keywords}
@@ -68,10 +67,11 @@ transitional \sep posit \sep assertion \sep bitemporality \sep concurrency \sep 
 \maketitle
 
 \section{Introduction}
-\noindent\textbf{The problem} is not that databases cannot store facts, but that they routinely discard the circumstances of those facts: who stated them, how confident they were, when the statement was recorded, and how both the world and opinions about it change over time. Modeling these requirements explicitly in conventional designs is complex and therefore often omitted, producing lossy implementations and lost provenance \cite{GolfarelliRizzi}. Yet in practice, statements have origins and degrees of confidence \cite{Liu}, and many domains require full auditability and non-destructive history (e.g., regulated finance, clinical records, intelligence and judicial applications) \cite{FisherEtAl}.
+\noindent
+Conventional databases can store facts, but they often discard the circumstances under which those facts were stated: who stated them, how confident they were, when the statement was recorded, and how both the world and opinions about it change over time. Modeling these requirements explicitly in conventional designs is complex and therefore often omitted, producing lossy implementations and lost provenance \cite{GolfarelliRizzi}. Yet in practice, statements have origins and degrees of confidence \cite{Liu}, and many domains require full auditability and non-destructive history (e.g., regulated finance, clinical records, intelligence and judicial applications) \cite{FisherEtAl}.
 
 \noindent
-Even when temporal support exists at the database level, it is typically layered onto the relational model and remains insufficient for representing multi-source disagreement and evolving beliefs \cite{SQL2011,Johnston}. A central motivation in this paper is to move conflict handling from \emph{write time} (where integration rules prematurely discard alternatives) to \emph{query time} (where decisions can be made using the full body of competing evidence) \cite{MassaroEtAl,LinEtAl}.
+Even when temporal support exists at the database level, it is typically layered onto the relational model and remains insufficient for representing multi-source disagreement and evolving beliefs \cite{SQL2011,Johnston}. More broadly, conventional systems tend to demand conformance too early: data must already fit a table, key, type, and integration regime before it can be stored. Schema-light systems relax these demands, but often shift the burden to readers who must reconstruct meaning, consistency, and provenance afterwards. A central motivation in this paper is to move conflict handling from \emph{write time} (where integration rules prematurely discard alternatives) to \emph{query time} (where decisions can be made using the full body of competing evidence) \cite{MassaroEtAl,LinEtAl}, while still allowing classifications, and ultimately richer schema-level commitments, to emerge as represented information rather than as a single fixed prerequisite for storage.
 
 \noindent
 We use the following running example throughout:
@@ -81,7 +81,29 @@ The accused, Archie, was seen fleeing the scene of the crime by two witnesses, D
 \end{quote}
 
 \noindent
-\textsc{Contributions.} This rework focuses narrowly on: (i) the posit/assertion duality as the atomic representation construct, (ii) a signed certainty scale \(c\in[-1,1]\), and (iii) the bitemporal algorithm for selecting the \emph{information in effect}. Topics like schema bootstrapping, identification, and constraint enforcement are deferred to future work.
+\textsc{Contributions.} This rework focuses on: (i) posits as the single atomic representation construct, with assertions treated as ordinary posits over reserved roles, (ii) a compact class layer showing how model-level distinctions are represented inside the same formalism, (iii) a signed certainty scale \(c\in[-1,1]\), and (iv) deterministic temporal-resolution procedures that support both ordinary posit cuts and the global \emph{information in effect} slice for assertion bodies, as well as clause-local temporal cuts chosen at query time. Richer typing and full constraint enforcement are deferred to future work. Identification remains outside the representation layer by design.
+
+\noindent
+\textsc{Scope and evaluation stance.} The present article is a formal and conceptual contribution. Its purpose is to define the representation, clarify its semantics, and position it relative to adjacent data-management formalisms. It does \emph{not} claim a complete theory of schema evolution, constraint reasoning, or source-fusion policy, nor does it present a comparative systems benchmark. The implementation notes included later serve only to show feasibility and to connect the formalism to an executable system.
+
+\begin{table}[htb]
+\centering
+\small
+\begin{tabular}{l l}
+\toprule
+Symbol & Meaning \\ \midrule
+\(D\) & appearance set \\
+\(v\) & value \\
+\(p_{id}\) & posit identifier \\
+\(s_{id}\) & positor (source) identifier \\
+\(t_{\mathrm{app}} \in \mathbb{t}\) & appearance time \\
+\(T_{\mathrm{ast}} \in \mathbb{T}\) & assertion time \\
+\(c \in [-1,1]\) & signed certainty \\
+\bottomrule
+\end{tabular}
+\caption{Core notation used throughout the paper.}
+\label{Table:notation}
+\end{table}
 
 \section{The Transitional Model (Core Constructs)}
 \subsection{Posits}
@@ -92,7 +114,7 @@ An \emph{appearance} is a pair \((i, r)\) where the first element is a unique id
 \textbf{Note on identifiers.} Identifiers are opaque tokens: the formalism receives them as the \emph{outcome} of an identification process that operates entirely outside the representation layer. Identification is a search process by which circumstances are matched against available data, ending in one of two outcomes: an identity is established or it is not. What those circumstances are may vary widely --- from a reproducible customer-number lookup to an open-ended detective investigation. When the process is so reproducible that the same circumstances always produce the same result, those circumstances constitute a \emph{key}. Keys are useful automation aids for the identification process, but they must never affect the representation model itself: a model that encodes a particular identification process would reflect a single point of view, be bound to the time frame in which that process is valid, and risk obsolescence when the process changes.
 
 \noindent
-Identifiers are, however, the one element that positors must share to be in genuine conflict---two positors can only disagree if their assertions reference the same appearance set, which requires agreed-upon referents. Everything else concerning an entity remains expressible \emph{within} the formalism as ordinary posits with reserved roles: classification (``J42 is a person since 1980-02-13''), class transitions (``J42 is a female child'' until ``J42 is a female adult''), and even conflicting co-reference hypotheses (``J42 and K99 refer to the same individual'', asserted with some certainty by one positor and disputed by another) are all posits subject to the usual assertion mechanics.
+Identifiers are also the one element that positors must share for disagreement to be interpretable as disagreement about the same referent. Two positors can only disagree if their assertions reference the same appearance set. How such shared reference is established is an identification problem outside the representation layer. Everything else concerning an entity remains expressible \emph{within} the formalism as ordinary posits with reserved roles: classification (``J42 is a person since 1980-02-13''), class transitions (``J42 is a female child'' until ``J42 is a female adult''), and even conflicting co-reference hypotheses (``J42 and K99 refer to the same individual'', asserted with some certainty by one positor and disputed by another) are all posits subject to the usual assertion mechanics. Such co-reference posits are selected by the same bitemporal rules as any other posit, but traversing them to expand a query from \(J42\) to \(K99\) is a consumer-level policy decision, not part of the core \emph{information in effect} operator.
 
 \deffy{def. of an appearance set}{%
 An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of appearances where any role \(r_i\) may only appear once.}{appearanceset}
@@ -118,7 +140,7 @@ and, for a relationship:
 \end{align*}
 
 \noindent
-\textbf{Why posits are not enough.} It is tempting to model \emph{corrections} as additional posits. For instance, if a birth date was recorded incorrectly, one might add a later posit with a different value. But posits form an unordered set: there is no built-in mechanism for one posit to override another. When two posits share the same appearance set and appearance time but carry different values, the collection is ambiguous---there is no way, from inside the set of posits alone, to determine which corresponds to the actual state of affairs.\footnote{Think of posits as a shuffled deck of cards handed to you; you must identify the true ones using only the information printed on the cards themselves---no card can designate itself as the authoritative one.} Interpreted as a natural transition, conflicting same-time posits would imply the impossible: that Archie was actually born in August \emph{and} in September. Corrections must therefore be handled at a different level, by expressing evolving \emph{opinions} about posits rather than by adding rival posits.
+\textbf{Why posits are not enough.} Corrections cannot be modeled adequately as additional posits alone. If a birth date was recorded incorrectly, one might add a later posit with a different value. However, posits form an unordered set: there is no built-in mechanism for one posit to override another. When two posits share the same appearance set and appearance time but carry different values, the collection is ambiguous---there is no way, from inside the set of posits alone, to determine which corresponds to the actual state of affairs.\footnote{Think of posits as a shuffled deck of cards handed to you; you must identify the true ones using only the information printed on the cards themselves---no card can designate itself as the authoritative one.} If interpreted as a natural transition, conflicting same-time posits would imply that Archie was born in August \emph{and} in September. Corrections must therefore be handled at a different level, by expressing evolving \emph{opinions} about posits rather than by adding rival posits.
 
 \subsection{Assertions as Posits}
 \noindent
@@ -127,32 +149,58 @@ Posits are treated as syntactical items towards which different actors may hold 
 \deffy{def. of an assertion}{%
 An \emph{assertion} is a posit on the form
 $$\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T_{\mathrm{ast}}\right]$$
-where \(p_{id}\) identifies the posit being asserted, \(s_{id}\) identifies the \emph{positor}, \(T_{\mathrm{ast}}\in\mathbb{T}\) is \emph{assertion time}, and \(c\in[-1,1]\) is \emph{signed certainty}.}{assertion}
+where \(p_{id}\) identifies the posit being asserted, \(s_{id}\) identifies the \emph{positor} (source), \(T_{\mathrm{ast}}\in\mathbb{T}\) is \emph{assertion time}, and \(c\in[-1,1]\) is \emph{signed certainty}.}{assertion}
 
 \noindent
-We write this compactly as \(\asrt(s_{id}, p_{id}, c, T_{\mathrm{ast}})\).
-
-\noindent
-Representing assertions as posits is deliberate: because an assertion is itself a posit, it can in turn be asserted by another positor, enabling recursive layers of meta-commentary—uncertainty about uncertainty, provenance of provenance—within the same uniform construct and without any change of representation.
+Representing assertions as posits preserves uniformity: because an assertion is itself a posit, it can in turn be asserted by another positor, enabling recursive layers of meta-commentary—uncertainty about uncertainty, provenance of provenance—within the same construct.
 
 \noindent
 Intuitively, \(c=1\) means the positor is certain the posit holds, \(c=0\) means complete uncertainty, and \(c=-1\) means the positor is certain the posit does \emph{not} hold.
 
 \noindent
-Signed certainty can be read in two complementary ways: either as a number attached to a posit, or as a way to refer to the \emph{complement} of a posit (e.g., ``not shaved clean''). In practice, both are useful: complements are convenient for human communication, while signed certainty is convenient for compact storage and algebraic manipulation.
+Signed certainty can be read in two complementary ways: either as a number attached to a posit, or as a way to refer to the \emph{complement} of a posit (e.g., ``not shaved clean''). Complements are convenient for exposition, while signed certainty is convenient for storage and algebraic manipulation.
 
 \noindent
 In the running example, let:
 \begin{alignat*}{3}
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}] \\
 p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:02}] \\
-\asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-\asrt(D, p_{2},\;&& 1.0,\;&& \textrm{Friday})
+[\{(p_{1}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Friday}] \\
+[\{(p_{2}, \textit{posit}), (D, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Friday}]
 \end{alignat*}
+
+\subsection{A Minimal Class Layer}
+\deffy{def. of a class and a classifier}{%
+Reserve the roles \textit{named}, \textit{thing}, and \textit{class}. A \emph{class} is an identifier \(c_{id}\) for which some unary posit \([\{(c_{id}, \textit{named})\}, n, t]\) exists, where \(n\) is the name of the class. A \emph{classifier} is a posit \([\{(i,\textit{thing}), (c_{id},\textit{class})\}, a, t]\) relating an identifier \(i\) to a class identifier \(c_{id}\), where \(a\) is a marker such as \textit{active} or \textit{inactive}.}{class}
+
+\noindent
+This layer shows that a minimal amount of model structure can be expressed inside the same formalism as first-order information. In the running example, let:
+\begin{alignat*}{3}
+q_{1} = [\{(C_{\mathrm{person}}, \textit{named})\},\;&& \textit{Person},\;&& \textrm{Friday}] \\
+q_{2} = [\{(A, \textit{thing}), (C_{\mathrm{person}}, \textit{class})\},\;&& \textit{active},\;&& \textrm{1972\text{-}08\text{-}20}] \\
+q_{3} = [\{(C_{\mathrm{suspect}}, \textit{named})\},\;&& \textit{Suspect},\;&& \textrm{Friday}] \\
+q_{4} = [\{(A, \textit{thing}), (C_{\mathrm{suspect}}, \textit{class})\},\;&& \textit{active},\;&& \textrm{Friday}] \\
+[\{(q_{1}, \textit{posit}), (M, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Friday}] \\
+[\{(q_{2}, \textit{posit}), (M, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Friday}] \\
+[\{(q_{3}, \textit{posit}), (I, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Friday}] \\
+[\{(q_{4}, \textit{posit}), (I, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Friday}]
+\end{alignat*}
+
+\noindent
+Here \(q_{1}\) and \(q_{3}\) name two classes, while \(q_{2}\) says that Archie (\(A\)) belongs to the class \textit{Person} from his birth onward and \(q_{4}\) says that Archie belongs to the class \textit{Suspect} from Friday onward. The two claims live at different levels of abstraction, may be asserted by different positors, and are queryable and revisable like any other posits. The same mechanism also supports conflicting classifications. One positor may assert that Archie is a \textit{Suspect} with certainty \(1\), while another asserts the same classifier with certainty \(0\), or instead asserts a competing classifier such as \textit{Witness} or \textit{Victim}. Such disagreement is represented in exactly the same way as disagreement about beard state or event participation.
+
+\noindent
+A query over the information in effect can therefore treat class memberships and domain facts uniformly: ``Who was classified as a suspect on Friday?'' is handled by the same retrieval machinery as ``Who was observed with a beard at 10:00?'' The role of the class layer in the present paper is not to provide a full schema theory, but to show that model-level distinctions can enter the same bitemporal and source-sensitive representation as first-order assertions. Subclass relations, class transitions, and richer modeling constructs can be expressed in the same style, but are left outside the present minimal formalization.
 
 \section{Epistemic Properties of the Model}
 \noindent
-\textbf{Imprecision versus uncertainty.} Two distinct concepts govern how a posit relates to the world. \emph{Imprecision} is a property of values: a value such as \textit{fluffy red} maps crisply to a range of real-world colors, and whether a particular color falls within that range is an objective evaluation performed by the asserter at assertion time. \emph{Uncertainty}, by contrast, is subjective and contextual: it is the degree of belief a positor holds towards a posit, given their own information and viewpoint. A positor may be completely certain about an imprecise value (asserting \(c=1\) for ``approximately noon'' without knowing the exact minute) and completely uncertain about a precise one (asserting \(c=0\) for an exact timestamp). This distinction explains why signed certainty is subjective and can be negative—the positor is certain of the \emph{complement}—whereas a classical probability is objective and bounded below by zero.
+\textbf{Imprecision versus uncertainty.} Two distinct concepts govern how a posit relates to the world. \emph{Imprecision} is a property of values: a value such as \textit{fluffy red}, \textit{approximately noon}, or \textit{Person} applies to a range of possible realities rather than to one perfectly delimited state. Yet when a positor makes an assertion, that imprecision is evaluated \emph{crisply}: from the positor's point of view the actual beard color either counts as \textit{fluffy red} or it does not; the observed time either counts as \textit{approximately noon} or it does not. \emph{Uncertainty}, by contrast, is subjective and contextual: it is the degree of belief a positor holds towards the posit after making that evaluation, given their own information and viewpoint.
+
+\noindent
+This distinction locates fuzziness in the assertion rather than in the value itself. A positor may be completely certain about an imprecise value (asserting \(c=1\) for ``approximately noon'' without knowing the exact minute) and completely uncertain about a precise one (asserting \(c=0\) for an exact timestamp heard second-hand). Increasing precision may even reduce certainty: someone may be sure that Archie wore a red beard, less sure that it was \emph{fluffy red}, and less sure still that it was \emph{fluffy red at 10{:}00 sharp}. Signed certainty therefore measures subjective commitment to a posit, not objective probability in the world. This is why certainty may be negative: the positor is certain of the \emph{complement}, not assigning a negative probability to reality.
+
+\noindent
+This separation preserves the law of excluded middle at the level of evaluation. For any specific subject in a specific context, a value either applies or it does not; what remains open is not truth in that moment of evaluation but the subject's confidence in the posit they have formed. Transitional representation thus treats values as \emph{crisp but imprecise} and assertions as the locus of subjective doubt.
 
 \subsection{A signed certainty scale}
 \noindent
@@ -179,6 +227,9 @@ $-1.00$  & It is certain that the value is not $v$ \\
 \label{Table:certainties2}
 \end{table}
 
+\noindent
+Signed certainty records a source's expressed degree of commitment to a posit and preserves that commitment exactly as stated. The formalism does \emph{not} guarantee that certainty values supplied by different positors are commensurable: two positors may both assert \(c=0.75\) while having arrived at that number through different personal, institutional, or computational calibration regimes. This limitation is acceptable for the representation layer because the immediate task is faithful preservation of what each source asserted. Where cross-source aggregation or comparison of certainty is required, commensurability must be established by domain-specific elicitation protocols, external source models, or calibrated scoring procedures.
+
 \begin{figure}[pos=htbp]
 \centering
 \includegraphics[width=0.25\linewidth]{v_and_not_v.pdf}
@@ -186,15 +237,15 @@ $-1.00$  & It is certain that the value is not $v$ \\
 \label{Figure:boundsym}
 \end{figure}
 
-\subsection{Well-behaving bodies of information}
+\subsection{Well-formed bodies of information}
 \deffy{def. of a body of information}{%
-A \emph{body of information} is a set of assertion posits that represent actual facts in the universe of discourse.}{body}
+A \emph{body of information} is a set of posits.}{body}
 
 \noindent
-A body of information is \emph{well-behaving} when its assertions satisfy a set of mutually reinforcing properties. The first ensures that negated values and negative certainties are interchangeable:
+In the remainder of this subsection, the bodies under discussion are bodies of assertion posits. Such a body is \emph{well-formed} when its assertions satisfy a set of mutually reinforcing properties. The first ensures that negated values and negative certainties are interchangeable:
 
 \deffy{def. of symmetric}{%
-A body of information is said to be \emph{symmetric} iff the assertions \(\asrt(S, p, {-c}, T)\) and \(\asrt(S, \bar{p}, c, T)\) are equivalent for a posit \(p\) and its complement \(\bar{p}\).}{symmetry}
+A body of information is said to be \emph{symmetric} iff the assertion posits \([\{(p,\textit{posit}),(S,\textit{ascertains})\},-c,T]\) and \([\{(\bar{p},\textit{posit}),(S,\textit{ascertains})\},c,T]\) are equivalent for a posit \(p\) and its complement \(\bar{p}\).}{symmetry}
 
 \noindent
 Symmetry allows a positor to express ``certainly not fluffy red'' either as certainty \(-1\) for \(p\!=\)[\ldots, \textit{fluffy red}, \ldots] or as certainty \(1\) for \(\bar{p}\!=\)[\ldots, \textit{not fluffy red}, \ldots]. To avoid storing complemented values, any symmetrical body can be normalized:
@@ -206,7 +257,7 @@ A body of information is said to be \emph{canonical} iff all assertions are made
 The next property bounds the certainties for a value and its complement so they cannot independently saturate the scale:
 
 \deffy{def. of bounded}{%
-A body of information is said to be \emph{bounded} iff the certainties in the assertions \(\asrt(S, p, c, T)\) and \(\asrt(S, \bar{p}, d, T)\) satisfy \(\abs{c + d} = \abs{c + d}^2\), i.e.\ \(c + d \in \{-1, 0, 1\}\).}{boundary}
+A body of information is said to be \emph{bounded} iff the certainties in the assertion posits \([\{(p,\textit{posit}),(S,\textit{ascertains})\},c,T]\) and \([\{(\bar{p},\textit{posit}),(S,\textit{ascertains})\},d,T]\) satisfy \(\abs{c + d} = \abs{c + d}^2\), i.e.\ \(c + d \in \{-1, 0, 1\}\).}{boundary}
 
 \noindent
 For example, if Charlie asserts \(c = 0.75\) for ``fluffy red'', boundary implies \(d = 0.25\) for ``not fluffy red''. The symmetry and bounded conditions on the certainty scale are illustrated in Figure~\ref{Figure:boundsym}. The next property prevents a positor from simultaneously holding two different certainties for the very same posit:
@@ -221,7 +272,7 @@ Exclusivity rules out statements such as ``I think Archie had a red beard and I 
 A body of information is said to be \emph{universal} iff positors agree on all appearances.}{universal}
 
 \noindent
-Without universality, disagreement is meaningless: positors must share a common referent to be genuinely in conflict. Together, the four properties yield:
+Without universality, disagreement cannot be interpreted as disagreement about the same referent. Together, the four properties yield:
 
 \deffy{def. of comprehensive}{%
 A body of information is said to be \emph{comprehensive} iff it is symmetric, canonical, bounded, exclusive, and universal.}{comprehensive}
@@ -247,13 +298,13 @@ Requiring this total not to exceed~1 prevents the positor from collectively over
 
 \noindent
 \textsc{Example.} Suppose Donna has two assertions simultaneously in effect at \((\textrm{Sunday}, \textrm{10:03})\):
-\[a_5 = \asrt(D,\,p_4,\;0.25,\;\textrm{Sunday})\quad\text{and}\quad a_6 = \asrt(D,\,p_2,\;{-0.75},\;\textrm{Sunday})\]
+\[a_5 = [\{(p_4,\textit{posit}),(D,\textit{ascertains})\},0.25,\textrm{Sunday}]\quad\text{and}\quad a_6 = [\{(p_2,\textit{posit}),(D,\textit{ascertains})\},-0.75,\textrm{Sunday}]\]
 (``possibly fluffy red'' and ``probably not shaved clean''). One certainty is negative ($-0.75$), and the sum is $0.25 + (-0.75) = -0.5$, so the left-hand side equals $1 + (-0.5) = 0.5 \leq 1$. Donna is well within bounds and is not contradicting herself. Note that a positor may simultaneously assert \(c=-1\) (``certainly not'') for an unlimited number of posits without ever violating the inequality.
 
 \noindent
-\textsc{Mutual exclusivity.} The non-contradiction formula applies per appearance set and assumes that the posits being compared represent \emph{mutually exclusive} alternatives for a single value slot. ``Archie's beard is fluffy red'' and ``Archie's beard is shaved clean'' are alternatives for the same appearance set \(\{(A, \textit{has beard})\}\), so they compete. If a domain requires multi-valued attributes, each value dimension must be separated into distinct roles so that each appearance set carries exactly one value at a time --- the functional dependency from appearance set to value is a design requirement, not an incidental restriction.
+\textsc{Mutual exclusivity.} The non-contradiction formula applies per appearance set and assumes that the posits being compared represent \emph{mutually exclusive} alternatives for a single value slot. ``Archie's beard is fluffy red'' and ``Archie's beard is shaved clean'' are alternatives for the same appearance set \(\{(A, \textit{has beard})\}\), so they compete. If a domain requires multi-valued attributes, each value dimension must be separated into distinct roles so that each appearance set carries exactly one value at a time --- the functional dependency from appearance set to value is a design requirement, not an incidental restriction. For example, ``Archie speaks English'' and ``Archie speaks French'' should not be modeled as competing values of a single \textit{language} slot. They are better represented as distinct appearance sets such as \(\{(A,\textit{person}),(E,\textit{language})\}\) and \(\{(A,\textit{person}),(F,\textit{language})\}\), each with a value such as \textit{fluent} and its own appearance time. The contradiction budget then applies independently to each person-language pair.
 
-\section{Bitemporal Dynamics (Information in Effect)}
+\section{Temporal Resolution}
 \subsection{Retractions and corrections}
 \deffy{def. of complete uncertainty}{%
 An assertion posit is called \emph{completely uncertain} when the signed certainty is $0.0$.}{uncertain}
@@ -272,14 +323,24 @@ Let \(\mathbb{A}\) be a body of information. The three assertion posits
 \(a_3 = \left[\{(p'_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c', T'\right]\)
 form a \emph{correction} when \(p_{id} \neq p'_{id}\), \(c\neq 0\), \(c'\neq 0\), and \(T < T'\).}{correction}
 
-\subsection{The information in effect}
+\subsection{Resolution of posits and assertions}
+\noindent
+\textsc{Selection assumptions.} For the purposes of retrieval, any temporal domain used by a query is assumed to be totally ordered. This assumption concerns only the ordering required by the selection procedure. It does not deny that temporal expressions encountered in source information may be imprecise; rather, such imprecision must be evaluated, normalised, or otherwise made comparable before selection is applied.
+
+\deffy{def. of posit resolution}{%
+Let \(\mathbb{P}\) be a set of posits \([D,v,t]\) over an ordered temporal domain. The \emph{resolution} of \(\mathbb{P}\) at a cut point \(t_@\) is the subset
+\(\rho(\mathbb{P}, t_@) \subset \mathbb{P}\)
+containing exactly those posits with \(t \leq t_@\) whose time \(t\) is maximal for their appearance set \(D\). If several posits for the same appearance set share that maximal time, they are all retained.}{resolution}
+
+\noindent
+This single-axis rule is the generic temporal treatment of posits. It applies to ordinary domain posits, class posits, and any other posit family whose own time coordinate is the one being queried. A useful information store may therefore exist without assertions at all; in that case, temporal querying is simply repeated application of \(\rho(\mathbb{P}, t_@)\) to the relevant posit families.
+
 \deffy{def. of the information in effect}{%
-Let \(\mathbb{A}\) be a body of information. The \emph{information in effect} is a subset
+Let \(\mathbb{A}\) be a body of information whose members are assertion posits
+\(\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T\right]\)
+about posits \(p = [D, v, t_{\mathrm{app}}]\). The \emph{information in effect} at \((T_@, t_@) \in \mathbb{T} \times \mathbb{t}\) is the subset
 \(\mathbb{A}(T_@, t_@) \subset \mathbb{A}\)
-given a bitemporal point \((T_@, t_@) \in \mathbb{T} \times \mathbb{t}\).
-Assuming \(s_{id}\), \(c\), \(T\), \(D\), \(v\), and \(t_{\mathrm{app}}\) are free variables, all assertion posits
-\(\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T\right] \in \mathbb{A}(T_@, t_@)\)
-with posit \(p = [D, v, t_{\mathrm{app}}]\) are found using the following selection criteria:
+found using the following criteria:
 \begin{criteria}
 \item Let \(\mathbb{A}_1 \subset \mathbb{A}\) be the assertions satisfying \(T \leq T_@\) and \(t_{\mathrm{app}} \leq t_@\).
 \item Let \(\mathbb{A}_2 \subset \mathbb{A}_1\) be the assertions with \(c \neq 0\) and the latest appearance time \(t_{\mathrm{app}}\) for each combination of \(s_{id}\) and \(D\), excluding those for which a retraction exists at some \(T_0\) with \(T \leq T_0 \leq T_@\).
@@ -287,7 +348,25 @@ with posit \(p = [D, v, t_{\mathrm{app}}]\) are found using the following select
 \end{criteria}}{effect}
 
 \noindent
-In less formal terms, first rewind to assertions not after \((T_@, t_@)\); then keep, per positor and appearance set, the latest asserted appearance-time state that has not been retracted; finally keep the latest assertion-time version for each value. This deterministically collapses bitemporal, multi-source history into a queryable slice.
+In less formal terms, ordinary posit resolution keeps the latest visible posit per appearance set at the chosen cut point. Assertions require one additional layer: first rewind to assertions not after \((T_@, t_@)\); then keep, per positor and appearance set, the latest asserted appearance-time state that has not been retracted; finally keep the latest assertion-time version for each value. Bitemporality is therefore not a universal prerequisite of the formalism. It arises specifically when one resolves assertion posits about temporally indexed posits.
+
+\noindent
+\textsc{Query-dependent cuts.} A query need not use one global cut for every clause. A query processor may resolve one family of posits at \(t_1\), another at \(t_2\), and an assertion body at \((T_3,t_3)\), then join the resulting subsets afterwards. The choice of how many cuts to use, and how they are related, is a query-time decision. In richer cases a cut used in one clause may itself be obtained from another resolved posit, so that temporal resolution becomes data-dependent while the local rules remain unchanged.
+
+\noindent
+Such data-dependent cuts are well-defined under a stratified query discipline in which each cut may depend only on literals or on bindings produced by earlier clauses. Circular cut dependencies are therefore excluded at the query-language level rather than by the representation formalism itself.
+
+\noindent
+\textsc{Proposition (determinism).} Under the ordering assumption above, both \(\rho(\mathbb{P}, t_@)\) and \(\mathbb{A}(T_@, t_@)\) are uniquely determined for every admissible input and cut point. Consequently, any query that combines finitely many such cuts is deterministic once its temporal bindings are fixed.
+
+\noindent
+\textsc{Proof sketch.} For ordinary posits, \(\rho(\mathbb{P}, t_@)\) is a deterministic filter followed by grouped maxima on appearance time, with ties retained rather than broken arbitrarily. For assertion bodies, Step 1 is a deterministic filter using only order comparisons. Step 2 deterministically retains exactly those non-retracted assertions whose appearance time is maximal within each \((s_{id}, D)\) group; if several values share that same maximal appearance time, they are all retained, so indecisiveness is preserved rather than resolved arbitrarily. Step 3 deterministically retains, within each \((s_{id}, D, v)\) group, the assertions with maximal assertion time. Because each step is deterministic and no step introduces arbitrary tie-breaking, the resulting subsets are unique. A query that combines several temporal cuts remains deterministic provided that the temporal points supplied to each invocation are themselves determined by literals or by earlier resolved bindings.
+
+\noindent
+\textsc{Implementation note.} The procedures above are constructive semantic descriptions, not prescribed physical execution plans. One invocation of \(\rho(\mathbb{P}, t_@)\) reduces retrieval to temporal filtering followed by grouped maxima over appearance sets, yielding linear cost in the number of temporally admissible candidates under standard hashing assumptions. One invocation of \(\mathbb{A}(T_@, t_@)\) reduces retrieval to temporal filtering followed by grouped maxima first on \((s_{id}, D)\) and then on \((s_{id}, D, v)\), again linear in the surviving assertion set under the same assumptions. In a practical store, the same semantics can be supported by indexes on the relevant time coordinates and appearance-set signatures. A query with temporally dependent joins simply invokes the relevant operator repeatedly, possibly with cut points supplied by earlier clauses; in the naive case, the cost of such a clause therefore grows linearly in its candidate set for each intermediate binding carried into it. The exact cost therefore depends on storage design, selectivity, and the number of clause-local resolutions performed. Because the stored information is finite and explicit, obtaining resolved slices does not require recursive inference, global fixpoint computation, or theorem proving.
+
+\noindent
+\textsc{Temporally dependent joins.} Because temporal resolution is defined independently of any particular posit type, the same rule can be applied uniformly to domain facts, class assertions, and assertions about assertions. This matters when one clause determines the cut used in another. For example, a query may first resolve a marriage posit at the present time to obtain its marriage time \(m_t\), then resolve assertions about that posit \emph{as of} \(m_t\), and finally resolve names for the spouses without requiring that every clause share the same global temporal cut. The formalism therefore separates \emph{how} a body is temporally resolved from \emph{how many} such resolutions a query combines.
 
 \noindent
 \textsc{Worked example.} Consider three beard-related posits and three assertions:
@@ -295,9 +374,9 @@ In less formal terms, first rewind to assertions not after \((T_@, t_@)\); then 
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}]  \\
 p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:02}]  \\
 p_{3} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:00}]  \\
-a_1 = \asrt(D, p_{2},\;&& 1.0,\;&& \textrm{Friday}) \\
-a_2 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_3 = \asrt(C, p_{3},\;&& -1.0,\;&& \textrm{Friday})
+a_1 = [\{(p_{2}, \textit{posit}), (D, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Friday}] \\
+a_2 = [\{(p_{1}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Friday}] \\
+a_3 = [\{(p_{3}, \textit{posit}), (C, \textit{ascertains})\},\;&& -1.0,\;&& \textrm{Friday}]
 \end{alignat*}
 
 \noindent
@@ -307,8 +386,8 @@ With \(\mathbb{A}=\{a_1,a_2,a_3\}\), the information in effect at \((\textrm{Sat
 Now suppose Bella wakes up on Sunday and Donna retracts her earlier certainty while tentatively aligning with Charlie:
 \begin{alignat*}{3}
 p_{4} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:02}] \\
-a_4 = \asrt(D, p_{2},\;&& 0.0,\;&& \textrm{Sunday}) \\
-a_5 = \asrt(D, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
+a_4 = [\{(p_{2}, \textit{posit}), (D, \textit{ascertains})\},\;&& 0.0,\;&& \textrm{Sunday}] \\
+a_5 = [\{(p_{4}, \textit{posit}), (D, \textit{ascertains})\},\;&& 0.25,\;&& \textrm{Sunday}]
 \end{alignat*}
 
 \noindent
@@ -319,19 +398,32 @@ With \(\mathbb{A}'=\mathbb{A}\cup\{a_4,a_5\}\), the information in effect at \((
 If two successive assertions in assertion time are otherwise equal, the later is a \emph{reassertion} of the earlier.}{reassertion}
 
 \deffy{def. of a restatement}{%
-For two assertions, \(\asrt(S, p, c, T)\) and \(\asrt(S, p', c, T)\), with \(p=[D,v,t_{\mathrm{app}}]\) and \(p'=[D,v,t'_{\mathrm{app}}]\) such that \(t_{\mathrm{app}} < t'_{\mathrm{app}}\), the latter is a \emph{restatement} of the former.}{restatement}
+For two assertion posits \([\{(p,\textit{posit}),(S,\textit{ascertains})\},c,T]\) and \([\{(p',\textit{posit}),(S,\textit{ascertains})\},c,T]\), with \(p=[D,v,t_{\mathrm{app}}]\) and \(p'=[D,v,t'_{\mathrm{app}}]\) such that \(t_{\mathrm{app}} < t'_{\mathrm{app}}\), the latter is a \emph{restatement} of the former.}{restatement}
 
 \noindent
 \textsc{Example (reassertion vs. restatement).} Let Charlie initially claim ``fluffy red'' at 10:00 with high confidence, then repeat the same claim on a later day (reassertion), and also apply the same confidence to the later appearance-time posit (restatement). Finally, Charlie downgrades confidence for the later appearance-time posit:
 \begin{alignat*}{3}
 p_{1} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:00}]  \\
 p_{4} = [\{(A, \textit{has beard})\},\;&& \textrm{fluffy red},\;&& \textrm{10:02}] \\
-a_2 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_7 = \asrt(C, p_{4},\;&& 0.75,\;&& \textrm{Friday}) \\
-a_8 = \asrt(C, p_{1},\;&& 0.75,\;&& \textrm{Sunday}) \\
-a_9 = \asrt(C, p_{4},\;&& 0.25,\;&& \textrm{Sunday})
+a_2 = [\{(p_{1}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Friday}] \\
+a_7 = [\{(p_{4}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Friday}] \\
+a_8 = [\{(p_{1}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.75,\;&& \textrm{Sunday}] \\
+a_9 = [\{(p_{4}, \textit{posit}), (C, \textit{ascertains})\},\;&& 0.25,\;&& \textrm{Sunday}]
 \end{alignat*}
 Here, \(a_8\) is a reassertion of \(a_2\) (only assertion time changes). Also, \(a_7\) is a restatement of \(a_2\) (same assertion time and value, later appearance time). The pair \(a_7\) and \(a_9\) illustrates belief revision without erasing history.
+
+\subsection{Additional timelines as represented information}
+\noindent
+The formalism makes appearance time primitive on posits. When assertions are used, assertion time becomes a second temporal coordinate for that posit family. Other timelines that practical systems care about can be represented \emph{within} the formalism rather than added as new primitives.
+
+\noindent
+\textbf{Recording time.} When a database stores an assertion, that act of inscription can itself be represented by a further posit or assertion about the stored assertion. Recording is therefore not a third primitive axis of truth; it is metadata about when some posit or assertion entered a particular memory. In system terms, recording time may coincide with insertion time in the underlying engine, but conceptually it is still represented information about a representational act.
+
+\noindent
+\textbf{Structuring time.} Changes to classes, roles, types, and constraints are likewise representable as ordinary posits. If a class \textit{Price Cut} is introduced on one date and revised later, those changes have their own appearance times and assertions. The resulting history is a \emph{structuring timeline}: not a separate primitive clock, but the temporal evolution of model-level posits. This is one reason it matters that classes and related constructs live inside the same formalism.
+
+\noindent
+This perspective also clarifies a common implementation pitfall: when appearance, assertion, and recording times are not separately available, one may be used as a proxy for another. Such approximation may be operationally necessary, but it must not be mistaken for equivalence. Recording time is often a tolerable proxy for missing assertion time; it is a much riskier proxy for appearance time, since what entered the system \emph{now} may concern a state that held long before or will hold only in the future.
 
 \section{Subsumption of Existing Models (Special Cases)}
 \noindent
@@ -345,7 +437,7 @@ Traditional models can be seen as special cases of transitional representation b
 \textsc{Anchor Modeling.} Anchors correspond to immutable unique identifiers, and attributes/ties correspond to posits with respectively unary and multi-appearance sets \cite{RonnbackEtAl}. In its basic form, Anchor Modeling can be seen as assuming a single positor asserting all posits with \(c=1\) since a fixed origin; see also the Anchor Modeling reference site \cite{Anchor}.
 
 \noindent
-\textsc{Data Vault.} Hubs correspond to immutable identifiers; satellites/links correspond to posits (unary vs. multi-appearance) but with emphasis on load-time tracking \cite{LinstedtEtAl,Hultgren}. In transitional representation, load time aligns naturally with assertion time, while appearance time remains the time of the modeled domain.
+\textsc{Data Vault.} Hubs correspond to immutable identifiers; satellites/links correspond to posits (unary vs. multi-appearance) but with emphasis on load-time tracking \cite{LinstedtEtAl,Hultgren}. In transitional representation, load time aligns most directly with \emph{recording} time: when a statement entered a particular store. It may sometimes be used as a proxy for assertion time when no better source timestamp exists, but the two should not be conflated. Appearance time remains the time of the modeled domain.
 
 \subsection{Relationship to other paradigms}
 \noindent
@@ -354,54 +446,44 @@ Restricting transitional representation further illuminates its relationship to 
 \section{Comparison with RDF-based Formalisms}
 \label{Sec:rdf}
 \noindent
-The Resource Description Framework (RDF)~\cite{RDF} and its extensions form the dominant standard for Semantic Web data. RDF's strengths---open-world semantics, universal URI-based identification, standardised query via SPARQL, and a rich global ecosystem---are well established. The comparison below does not argue for replacement; it examines four design choices where RDF and transitional representation diverge fundamentally.
+The Resource Description Framework (RDF)~\cite{RDF} and its extensions form the dominant standard for Semantic Web data. RDF's strengths---open-world semantics, universal URI-based identification, standardised query via SPARQL, and a rich ecosystem---are well established. The comparison below is therefore narrow: it examines only those points where transitional representation makes different primitives available, rather than arguing for replacement.
 
 \subsection{The binary constraint and \(n\)-ary facts}
 \noindent
-An RDF triple $(s, p, o)$ is inherently binary: one predicate relates exactly one subject to one object. A fact involving more participants must introduce an intermediate node. The W3C Working Group Note on n-ary relations~\cite{NoyRector} recommends creating a \emph{reified-relation instance} $e$ and connecting each participant via separate binary triples---$(e, \texttt{hasHusband}, H)$, $(e, \texttt{hasWife}, W)$, $(e, \texttt{officiatedBy}, M)$, $(e, \texttt{atLocation}, L)$---with provenance and time then attached to $e$ separately. The intermediate node carries no intrinsic truth value; it is an artefact of the binary constraint.
+An RDF triple $(s, p, o)$ is inherently binary: one predicate relates one subject to one object. A fact involving more participants must therefore introduce an intermediate node. The W3C note on n-ary relations~\cite{NoyRector} recommends exactly this pattern. The intermediate node is structurally useful, but it is still an artefact of binary encoding rather than the fact itself.
 
 \noindent
 By contrast, the same wedding fact is stated atomically in transitional representation:
 \begin{align*}
 \bigl[\{(H, \textit{is spouse}),\;(W, \textit{is spouse}),\;(M, \textit{officiated by}),\;(L, \textit{at location})\},\;\textit{married},\; t_{\mathrm{app}}\bigr]
 \end{align*}
-Any number of positors may independently assert and revise their certainty about this single posit without requiring an intermediate node, because the \emph{appearance set} is itself the composite subject.
+Any number of positors may assert and revise certainty about this single posit without introducing an event node, because the \emph{appearance set} is itself the composite subject.
 
-\subsection{Annotating statements: reification, named graphs, and RDF-star}
+\subsection{Annotating statements and sources}
 \noindent
-Three established patterns are used to attach metadata (provenance, time, certainty) to RDF triples.
-
-\noindent
-\textbf{Classic reification} creates a resource of type \texttt{rdf:Statement} and links it to the subject, predicate, and object of the target triple via \texttt{rdf:subject}, \texttt{rdf:predicate}, and \texttt{rdf:object}. Additional triples describe the asserter and time. The W3C n-ary relations note explicitly advises against using RDF reification for provenance purposes~\cite{NoyRector}: the target triple and its reification are structurally separate (reasoning over the reification does not entail the original triple), and two reifications of the same triple are independent resources with no canonical shared identity.
+RDF offers three main ways to attach metadata such as provenance, certainty, and time to a claim: classic reification, named graphs, and RDF-star~\cite{CarrollEtAl,HartigChampin,NoyRector}. Reification creates a separate \texttt{rdf:Statement} resource; named graphs annotate a graph name; RDF-star embeds one triple inside another. These differ syntactically, but they share one limitation relevant here: the metadata is attached by additional conventions rather than carried by a single primitive that already includes both \emph{what was claimed}, \emph{who claimed it}, and \emph{when it was claimed}.
 
 \noindent
-\textbf{Named graphs}~\cite{CarrollEtAl} group triples under a named URI and annotate that URI with metadata. Graph-level granularity means that per-triple annotation requires one named graph per triple, rapidly producing a proliferation of graph names. Representing temporal history requires either mutating graph contents destructively or accumulating successive graph versions, with no standardised bitemporal query interface to navigate them.
-
-\noindent
-\textbf{RDF-star}~\cite{HartigChampin} (incorporated into RDF~1.2 as \emph{triple terms}) allows a triple to appear as the subject or object of another triple, written $\langle\!\langle s\;p\;o\rangle\!\rangle\; q\; r$. This is syntactically cleaner than classic reification and, unlike named graphs, operates at triple granularity. In the running example, Charlie's belief about Archie's beard could be annotated as:
+RDF-star is the closest analogue, since it operates at triple granularity. In the running example, Charlie's belief about Archie's beard could be written:
 \begin{align*}
 \langle\!\langle A\;\texttt{ex:hasBeard}\;\textit{fluffy red}\rangle\!\rangle\;\texttt{ex:certainty}\;0.75, \qquad
 \langle\!\langle A\;\texttt{ex:hasBeard}\;\textit{fluffy red}\rangle\!\rangle\;\texttt{ex:assertedAt}\;\textit{Friday}
 \end{align*}
-The embedded triple $\langle\!\langle A\;\texttt{ex:hasBeard}\;\textit{fluffy red}\rangle\!\rangle$, however, carries no appearance time: the triple has no slot for \emph{when} the described state held in the world---only \emph{that} it holds. Encoding appearance time requires a further annotation property (e.g.\ \texttt{ex:validFrom~10:00}), but this annotation then attaches to the embedded triple as a whole. If Donna holds a different view of when the beard came to be, her annotation must reference the same embedded triple, and there is no standard mechanism for per-positor appearance times without reverting to the event-node pattern that RDF-star was meant to simplify.
+The embedded triple, however, still has no slot for appearance time. Encoding that requires a further annotation property (e.g.\ \texttt{ex:validFrom~10:00}), and different positors with different views of appearance time again require extra conventions or event-node patterns.
 
 \subsection{The temporal gap: bitemporality}
 \noindent
-OWL-Time~\cite{OWLTime} provides a rich ontology of temporal instants, intervals, and Allen's calculus of ordering relations~\cite{Allen}; it is well suited to representing when a state holds in the world (\emph{appearance time}, or valid time in database terminology). The W3C specification explicitly notes, however, that the ``valid time'' requirement is not resolved directly: only a user-defined specialisation of \texttt{time:hasTime} is suggested for that purpose~\cite{OWLTime}. More critically, OWL-Time has no concept of \emph{when a source's belief about a state was recorded or revised}. Assertion time---the second temporal axis of transitional representation---has no representation in OWL-Time or in any standard RDF vocabulary.
+OWL-Time~\cite{OWLTime} provides a rich ontology for temporal instants, intervals, and ordering relations~\cite{Allen}. It is well suited to representing when a state holds in the world (\emph{appearance time}, or valid time in database terminology). What it does not provide is a standard account of \emph{when a source's belief about that state was recorded or revised}. Assertion time---the second temporal axis of transitional representation---has no standard counterpart in RDF or OWL-Time.
 
 \noindent
-In practice, systems requiring both temporal axes must layer custom ``valid-from / transaction-time'' conventions on top of RDF. Such conventions are application-specific, making federated queries over bitemporal history non-portable across systems. Transitional representation builds both axes into the primary constructs: appearance time is part of every posit; assertion time is part of every assertion.
+Systems that need both axes must therefore add custom ``valid-from / transaction-time'' conventions on top of RDF. Those conventions are application-specific, making bitemporal history portable only at the application layer. Transitional representation instead makes appearance time part of every posit and assertion time part of every assertion.
 
-\subsection{Multi-source conflict}
+\subsection{Conflict handling and uniformity}
 \noindent
-Wikidata~\cite{VrandecicKrotzsch}, the world's largest public knowledge graph, uses RDF extended with statement nodes (structurally equivalent to reification) and assigns each statement a \emph{rank} (preferred, normal, or deprecated). This mechanism resolves competing values at \emph{write time}: a curator designates which value is currently authoritative. While efficient for editorial workflows, write-time resolution precludes later analysis of the conflict: the originating assertions---with their individual certainties, times, and sources---are subsumed into a single ranked view. It is not possible from the Wikidata RDF export to reconstruct the full bitemporal history of competing beliefs or to apply an alternative conflict-resolution policy at query time.
+Wikidata~\cite{VrandecicKrotzsch}, the world's largest public knowledge graph, resolves competing values operationally through statement ranks. This is effective for editorial workflows, but it pushes conflict resolution toward write time: one value is marked preferred, another normal, another deprecated. Transitional representation instead preserves competing assertions and applies no built-in fusion policy beyond the bitemporal \emph{information in effect} selection.
 
 \noindent
-Transitional representation defers resolution explicitly. The \emph{information in effect} procedure (Section~4) deterministically surfaces all surviving assertions at any bitemporal point, each retaining its certainty and positor identity, without discarding any historical assertion.
-
-\subsection{Uniformity of meta-representation}
-\noindent
-A structural property of transitional representation is that assertions are themselves posits: the same constructs apply recursively. Annotating an assertion therefore uses the same mechanism as annotating any first-order fact. In RDF-star, annotating an annotation requires nesting embedded triples, $\langle\!\langle\langle\!\langle s\;p\;o\rangle\!\rangle\; q\; r\rangle\!\rangle\;\ldots$, and the RDF-star specification itself cautions that deeply nested annotations become difficult to manage. Classic reification-of-a-reification is even more verbose. Neither the RDF data model nor SPARQL provides a standard construct for the multi-level bitemporal patterns that transitional representation expresses with the same three selection criteria at every recursion depth.
+A second difference is uniformity. In transitional representation, assertions are themselves posits, so the same representational machinery applies recursively. Annotating an assertion therefore uses the same constructs as annotating a first-order fact. RDF can express nested annotation patterns, especially with RDF-star, but the recursion is a matter of increasingly elaborate encoding rather than a single repeated primitive.
 
 \subsection*{Summary}
 \noindent
@@ -442,36 +524,30 @@ Distinctions between the time of an event and the time at which it is recorded h
 
 \noindent
 \textbf{Write-time vs.\ query-time conflict resolution.}
-A central principle of this paper is that resolving conflicts at write time is lossy~\cite{MassaroEtAl}: the integration rules must be fixed in advance, are assumed perfect, and cannot be revised retrospectively. Moving resolution to query time, without discarding any source assertion, is advocated in~\cite{LinEtAl} in the context of merging databases under constraints. The present formalism operationalises this principle through the \emph{information in effect} procedure. The information-fusion literature~\cite{SmetsEtAl,LiuEtAl} has explored real-time integration of uncertain sensory data; transitional representation offers an alternative in which raw source assertions are preserved and conflict resolution is deferred to decision time.
+A central principle of this paper is that resolving conflicts at write time is lossy~\cite{MassaroEtAl}: the integration rules must be fixed in advance, are assumed perfect, and cannot be revised retrospectively. Moving resolution to query time, without discarding any source assertion, is advocated in~\cite{LinEtAl} in the context of merging databases under constraints. The present formalism operationalises this principle through temporal resolution, of which the global \emph{information in effect} is the simplest case. The information-fusion literature~\cite{SmetsEtAl,LiuEtAl} has explored real-time integration of uncertain sensory data; transitional representation offers an alternative in which raw source assertions are preserved and conflict resolution is deferred to decision time.
 
 \noindent
 \textbf{Linguistics and epistemics.}
 \cite{Papafragou} establishes that ``subjective epistemic modality is time-dependent'': vague assertions are more prone to revision, a dynamic that our assertion-time axis tracks explicitly. \cite{MoensSteedman} define \emph{culmination} as a point in time marking a transition to a new state of the world, closely paralleling our use of appearance time to capture transitions between states.
 
 \noindent
-\textbf{Graph and RDF formalisms.} Section~\ref{Sec:rdf} provides a detailed comparison with RDF-based annotation mechanisms (classic reification, named graphs, RDF-star~\cite{HartigChampin}) and the Wikidata knowledge graph~\cite{VrandecicKrotzsch}. At the level of this overview: an RDF triple~\cite{RDF} is binary and atemporal by design; RDF-star and property graphs can attach per-triple provenance and time but provide no standard bitemporal axis, no signed certainty, and no uniform retraction semantics. Transitional representation makes $n$-ary appearance sets, bitemporality, signed certainty, and non-destructive retraction primitive, so that conflict resolution can be deferred uniformly to query time.
+\textbf{Graph and RDF formalisms.} Section~\ref{Sec:rdf} provides a focused comparison with RDF-based annotation mechanisms (classic reification, named graphs, RDF-star~\cite{HartigChampin}) and the Wikidata knowledge graph~\cite{VrandecicKrotzsch}. At the level of this overview: an RDF triple~\cite{RDF} is binary and atemporal by design; RDF-star and property graphs can attach per-triple provenance and time but provide no standard bitemporal axis, no signed certainty, and no uniform retraction semantics. Transitional representation makes $n$-ary appearance sets, bitemporality, signed certainty, and non-destructive retraction primitive, so that conflict resolution can be deferred uniformly to query time.
 
 \section{Conclusion and Future Work}
 \noindent
-Transitional representation treats concurrency, uncertainty, and bitemporality as first-class aspects of a single representation construct: posits and assertions. The \emph{information in effect} procedure enables query-time conflict handling without destructive updates. Deliberately, the formalism prescribes no fusion strategy: how competing assertions are ultimately reconciled --- whether by selecting the highest positive certainty, by credibility-weighted aggregation, by recency, or by any domain-specific policy --- remains a consumer decision made at query time and left entirely outside the representation layer. At that point the consumer receives the full information-in-effect slice: every surviving assertion with its positor identity, signed certainty, appearance time, and value. This makes all raw evidence available for any aggregation policy; no information has been pre-discarded. To illustrate: if the information in effect at \((\textrm{Sunday},\,10{:}03)\) contains \(\asrt(C, p_1, 0.75, \textrm{Friday})\) and \(\asrt(D, p_3, -1.0, \textrm{Friday})\) for the appearance set \(\{(A,\textit{has beard})\}\), a \emph{max-certainty} policy selects Charlie's value (highest positive certainty); a \emph{recency-biased} policy may weight Bella's later corroboration more heavily once \(a_5\) arrives; an \emph{agreement-seeking} policy might flag the appearance set as contested and decline to surface any single value. All three are valid consumer choices over the same unmodified slice.
+Transitional representation treats concurrency, uncertainty, and bitemporality as aspects of one representation construct: the posit. Because even a minimal class layer is expressible in the same terms, the formalism can represent not only contested facts but contested \emph{classifications}. Temporal resolution enables query-time conflict handling without destructive updates, whether a query uses one global cut or several clause-local ones. The formalism prescribes no fusion strategy: how competing assertions are ultimately reconciled --- whether by selecting the highest positive certainty, by credibility-weighted aggregation, by recency, or by any domain-specific policy --- remains a consumer decision made at query time and left outside the representation layer. At that point the consumer receives the relevant resolved slice or slices: every surviving assertion with its positor identity, signed certainty, appearance time, and value. To illustrate: if the information in effect at \((\textrm{Sunday},\,10{:}03)\) contains \(a_2=[\{(p_1,\textit{posit}),(C,\textit{ascertains})\},0.75,\textrm{Friday}]\) and \(a_3=[\{(p_3,\textit{posit}),(C,\textit{ascertains})\},-1.0,\textrm{Friday}]\) for the appearance set \(\{(A,\textit{has beard})\}\), a \emph{max-certainty} policy selects Charlie's value (highest positive certainty); a \emph{recency-biased} policy may weight Bella's later corroboration more heavily once \(a_5\) arrives; an \emph{agreement-seeking} policy might flag the appearance set as contested and decline to surface any single value. All three are valid consumer choices over the same unmodified slice.
 
 \noindent
-A reference implementation named Positorium~\cite{Positorium} demonstrates the viability of the approach. Positorium is an experimental database engine written in Rust~\cite{Matsakis} that stores data exclusively as posits---with no relational, document, or graph layer underneath. It exposes a domain-specific query language (Traqula) for defining roles, adding posits with times and certainties, and pattern-matching over appearance sets. The engine uses bitmap-backed indexes for set intersection, supports both in-memory and file-backed (SQLite) persistence with an integrity ledger, and provides an HTTP JSON endpoint (Axum/Tokio) for client access. The source code is publicly available under a dual Apache~2.0/MIT license.
+The same representational machinery also extends beyond descriptive facts. Normative claims such as obligations, permissions, and prohibitions can be represented as posits and disputed through assertions; semantic mapping claims such as synonymy, code translation, or partial equivalence between vocabularies can likewise be represented and revised over time; and evidential support can be attached uniformly by asserting how a belief was formed (e.g.\ eyewitness report, sensor reading, laboratory result, or model output). These are recurring integration problems in regulated, multilingual, and data-fusion settings, and they require no new primitives beyond those introduced here.
 
 \noindent
-Positorium's query language, Traqula~\cite{Positorium}, uses a pattern syntax that mirrors the posit structure directly. As an illustrative example, the following query retrieves all positors with positive certainty about Archie's beard as it appeared up to Sunday 10:03 --- the final bitemporal slice from the worked example in Section~4:
-\begin{quote}
-\small\ttfamily
-search [\{(+s, ascertains), (+p, posit)\}, +c, *], \\
-\phantom{search~}[\{(archie, has beard)\}, +v, *] as of 'Sunday 10:03' \\
-where c > 0\% \\
-return s, v, c;
-\end{quote}
-\noindent
-The two joined patterns mirror the assertion/posit duality: the first navigates the assertion layer (binding positor \texttt{s} and certainty \texttt{c}), the second descends into the underlying posit (binding beard value \texttt{v}). The \texttt{as~of} clause enforces the appearance-time snapshot; \texttt{where c > 0\%} restricts to beliefs with positive certainty.
+This system perspective clarifies the motivation further. Traditional databases tend to require conformance before storage; schema-light systems often postpone it entirely and inconsistently to read time. Transitional representation occupies an intermediate position. It allows raw competing assertions to be stored without forced reconciliation, while already making classifications available as represented, evolving, and source-dependent information. The same design points toward richer schema- and constraint-level representations. In that sense, the formalism suggests a path toward \emph{eventual conformance}: the possibility that structure itself emerges, changes, and is disputed over time.
 
 \noindent
-Future work (deferred from the earlier draft) includes schema/model bootstrapping within the representation itself and constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information. Identification --- the process of establishing which identifier to use --- is deliberately outside the representation layer and will be treated in a separate companion paper.
+A reference implementation named Positorium~\cite{Positorium} demonstrates the feasibility of the approach. Positorium is an experimental database engine written in Rust~\cite{Matsakis} that stores data as posits and exposes a query language, Traqula, for interacting with them. The implementation is cited here only as evidence that the formalism can be executed in a concrete system; details of system design, optimization, and query ergonomics lie outside the scope of the present paper. Interested readers can consult the public repository for the current state of the implementation.
+
+\noindent
+Future work includes richer typing beyond the minimal class layer formalized here, model bootstrapping within the representation itself, constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information, fuller treatment of recording and structuring histories in implementations, and empirical evaluation of storage and query strategies for large bodies of assertions. Identification --- the process of establishing which identifier to use --- remains outside the representation layer as a deliberate design boundary: it is a subjective process, of which key-based lookup is only a reproducible special case under prior agreement.
 
 \begin{thebibliography}{99}
 
