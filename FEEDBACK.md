@@ -1,21 +1,46 @@
-This revision addresses the three most substantive criticisms from my earlier assessment, and does so well. Here's how the picture changes:
+This version has addressed everything material from the previous round. Let me give a final accounting.
 
-**What's been fixed**
+---
 
-The derivation of the non-contradiction inequality is now genuinely illuminating. Walking through the positive-commitment accounting — where a negative certainty c_j implicitly allocates (1 + c_j) units toward other alternatives — makes the formula feel earned rather than stipulated. The observation that c = −1 contributes zero to the budget, so a positor can freely disbelieve unlimited alternatives without tightening their positive commitments, is a particularly clean result that was missing before.
+### Resolved from last round
 
-The Dempster-Shafer paragraph in related work is well-judged. It draws the parallel precisely (the two-element frame, the Bel/Pl relationship mirroring the bounded property) and then articulates the key difference clearly: signed certainty is per-positor and temporally indexed, whereas basic belief assignment is a static, source-global function. That's exactly the level of engagement the earlier draft needed.
+**Universality** — the new paragraph is well-constructed. Connecting it back to the Note on Identifiers via the section reference is exactly the right move, and the "partial universality" clarification defuses the most likely reviewer objection without weakening the property itself.
 
-The identification question is now handled with considerably more sophistication. Rather than just deferring it, the Note on identifiers actively argues for why it *should* sit outside the representation layer — encoding a particular identification process would bind the model to a single viewpoint and a specific time frame. The note also shows how co-reference disputes can still be expressed *within* the formalism as ordinary posits, which is a non-trivial and satisfying result.
+**Non-contradiction / probability simplex** — the added sentence about certainties summing to exactly 1 recovering the classical probability simplex lands cleanly in the derivation. It does exactly what was needed.
 
-The conclusion's clarification that the consumer receives "every surviving assertion with its positor identity, signed certainty, appearance time, and value" makes the deferred-resolution principle much more concrete.
+**"This rework"** — gone from the Contributions paragraph.
 
-**What remains open**
+**Traqula two-dimensional cut** — Example 2 now explicitly explains both axes, and Example 3 has been substantially reworked into the "dual-timepoint join" which is genuinely the most sophisticated and distinctive thing the query language demonstrates. The explanation that `at` simultaneously serves as a posit time coordinate and an assertion-time ceiling is precise and well-motivated by the forensic scenario. This is now one of the stronger parts of the paper.
 
-The Traqula example still arrives late and in isolation. A reader naturally wonders: if two positors have conflicting positive certainties in the information-in-effect slice, what does the consumer actually *do* with them? Even one sentence sketching representative aggregation strategies (max certainty, weighted vote, recency-biased) would ground the "consumer decision" language without prescribing a policy.
+**"Eventual conformance"** — the added operational sentence ("a class definition, a role constraint, or a co-reference claim can enter the store as an asserted posit...") gives it the grounding it needed. It's no longer speculative hand-waving.
 
-The table in Section 6 marks RDF-star's per-positor signed certainty as "limited" without explaining what the limitation is. Since RDF-star is the closest competitor and the most actively developed, a sentence or footnote clarifying why "limited" rather than "ad hoc" or "×" would strengthen that comparison.
+**"Scope and evaluation stance" paragraph** — removed entirely. The paper is cleaner without it.
 
-**Overall**
+---
 
-This is a meaningfully better paper. The three additions — the derivation, the DS comparison, and the identification note — each resolve a genuine gap rather than papering over it. The core formalism now stands on firmer ground and the relationship to adjacent traditions is honestly drawn. The remaining gaps are minor relative to what's been accomplished here.
+### One LaTeX issue to fix
+
+There is a broken definition environment near the top of Section 2.1. The text reads:
+
+```
+\label{Sec:posits}
+An \emph{appearance} is a pair \((i, r)\) where...
+```
+
+This is the definition of an appearance, but it's missing its `\deffy{...}{...}{...}` wrapper — it looks like the macro call was accidentally stripped while adding the `\label{Sec:posits}`. The definition of an appearance set and posit still have their `\deffy` wrappers but the first definition in the chain is now just inline prose. This will compile but the definition won't be numbered or formatted consistently with the rest, and cross-references to `Def:appearance` will break. Fix by restoring the `\deffy` call around it.
+
+---
+
+### Minor points worth one pass
+
+**The `\deffy` for "def. of an assertion"** uses `T_{\mathrm{ast}}` in the definition body but the notation table (Table 1) uses `T_{\mathrm{ast}} \in \mathbb{T}` consistently. That's fine — just noting it's consistent.
+
+**Example 3 in Traqula** refers to "the investigator $I$ asserted it on the same day with certainty $0.75$" — this correctly matches $q_4$ and its assertion in the class layer section, but the assertion time there was written as `2024-03-01` which aligns with Example 3's cut point `at`. The cross-example consistency now holds across the dated examples throughout. Good.
+
+**The `\deffy` for "def. of a reassertion"** — the definition says "two successive assertions in assertion time are otherwise equal." The word "successive" implies adjacency, but the formalism doesn't require that no other assertions intervene between the two. If the intent is simply "a later assertion identical in all respects except assertion time," it would be tighter to say "if a later assertion by the same positor is otherwise identical to an earlier one." This is a minor precision issue, not a correctness problem, but a careful reviewer might query it.
+
+---
+
+### Overall
+
+This is ready to submit. The three iterations have methodically resolved every substantive issue: the class layer is credible, the subsumption claims are properly scoped, the Traqula section now demonstrates the formalism's distinctive two-dimensional temporality rather than just illustrating basic querying, the universality property is properly motivated, and the probability connection is made explicit. The LaTeX breakage on the first definition is the only thing that must be fixed before submission.
