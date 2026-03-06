@@ -582,8 +582,8 @@ $\textit{add\_role}$ & $\to$ \texttt{add role} $\textit{role}^+$ \texttt{;} \\
 $\textit{add\_posit}$ & $\to$ \texttt{add posit} $\textit{posit}^+$ \texttt{;} \\
 $\textit{search}$ & $\to$ \texttt{search} $\textit{pattern}^+$ $\textit{where}?$ $\textit{return}$ $\textit{limit}?$ \texttt{;} \\
 $\textit{posit}$ & $\to$ $\textit{name}?$\; \texttt{[}\;\textit{appset},\;\textit{value},\;\textit{time}\;\texttt{]} \\
-$\textit{pattern}$ & $\to$ $\textit{name}?$\; \texttt{[}\;\textit{appset},\;\textit{value},\;\textit{time}\;\texttt{]}\; \textit{as\_of}?$ \\
-$\textit{as\_of}$ & $\to$ \texttt{as of} $(\textit{time} \mid \textit{variable} \mid$ \texttt{@NOW}$)$ \\
+$\textit{pattern}$ & $\to$ $\textit{name}?$\; \texttt{[}\;\textit{appset},\;\textit{value},\;\textit{time}\;\texttt{]}\; $\textit{as\_of}?$ \\
+$\textit{as\_of}$ & $\to$ \texttt{as of} $(\textit{time} \mid \textit{variable} \mid \texttt{@NOW})$ \\
 \end{tabular}
 \end{quote}
 Variables bind identities ({\small\texttt{+var}} creates and binds a new identity, {\small\texttt{var}} recalls a bound one), while {\small\texttt{*}} is a wildcard that matches without binding. In a multi-pattern search, variable bindings are shared across patterns, so a binding established in one clause constrains the next.
