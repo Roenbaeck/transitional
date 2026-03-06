@@ -1,0 +1,22 @@
+Subject: Submission of Manuscript — Data & Knowledge Engineering
+
+Dear Editor-in-Chief,
+
+I am pleased to submit the manuscript entitled "Transitional Representation: A Formalism for Conflicting and Evolving Data" for consideration for publication in Data & Knowledge Engineering.
+
+**The problem and contribution.** Conventional databases force premature conflict resolution at write time, permanently discarding provenance, multi-source disagreement, and evolving beliefs. This paper introduces Transitional Representation, a formal model that treats concurrency, bitemporality, and graded uncertainty as facets of a single uniform primitive — the n-ary, time-stamped posit. The key move is representing assertions (who believes what, with what certainty, and when) and schema classifications as ordinary posits over reserved roles, so that recursive meta-commentary, model-level disagreement, and schema evolution require no separate machinery. Two deterministic resolution operators are fully specified and proved to require no fixpoints or recursive inference, making them directly implementable. A reference query language, Traqula, and an experimental Rust-based engine, Positorium, demonstrate feasibility.
+
+**Relevance to DKE.** The work sits at the convergence of temporal database theory, conceptual modeling, and knowledge representation — the core topics of this journal. The paper provides formal reductions showing that 3NF relational tables, bitemporal databases, probabilistic databases, Anchor Modeling, Data Vault, and Wikidata-style ranked statements are all special cases of the formalism, positioning it as a strict generalization rather than a competing approach. A focused comparison with RDF-star, Property Graphs, and SQL temporal extensions highlights the gaps those models leave in multi-actor provenance and bitemporality that Transitional Representation closes.
+
+**Prior work with Elsevier.** The ideas in this paper build on two earlier Elsevier publications. The first, co-authored with O. Regardt, M. Bergholtz, P. Johannesson, and P. Wohed, is "Anchor modeling — Agile information modeling in evolving data environments," published in Data & Knowledge Engineering (Vol. 69, No. 12, December 2010, pp. 1229–1253; doi:10.1016/j.datak.2010.10.002; 28 citations). That paper introduced the non-destructive evolution of database structures and established the core Anchor Modeling formalism. The second, co-authored with Nikolay Golov, is "Big Data normalization for massively parallel processing databases," published in Computer Standards & Interfaces (Vol. 54, Part 2, November 2017, pp. 86–93; doi:10.1016/j.csi.2017.01.009; 29 citations). That paper demonstrated the scalability of highly normalized Anchor models in large-scale MPP environments. The present manuscript is the natural continuation of both lines of work: where those papers addressed the evolution of structure and its performance at scale, this one addresses the non-destructive evolution of facts, beliefs, and multi-actor consensus at the representation level.
+
+**Submission declaration.** The manuscript is original, has not been published elsewhere, and is not currently under review by any other journal or conference.
+
+Thank you for your consideration. I look forward to the reviewers' feedback.
+
+Sincerely,
+
+Lars Rönnbäck
+Department of Computer and Systems Sciences
+Stockholm University, Sweden
+lars.ronnback@anchormodeling.com
