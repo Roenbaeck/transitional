@@ -255,10 +255,13 @@ $-1.00$  & It is certain that the value is not $v$ \\
 \noindent
 Signed certainty records a source's expressed degree of commitment to a posit and preserves that commitment exactly as stated. The formalism does \emph{not} guarantee that certainty values supplied by different positors are commensurable: two positors may both assert \(c=0.75\) while having arrived at that number through different personal, institutional, or computational calibration regimes. This limitation is acceptable for the representation layer because the immediate task is faithful preservation of what each source asserted. Where cross-source aggregation or comparison of certainty is required, commensurability must be established by domain-specific elicitation protocols, external source models, or calibrated scoring procedures. For machine sources such as trained classifiers or probabilistic models, the situation is more tractable: for well-calibrated probabilistic models, the output score is a probability on \([0,1]\) regardless of which system instance produced it, so alignment to the certainty scale is a one-time normalization rather than a cross-source calibration problem. The harder case is human sources, where subjective commitment to a posit cannot be read off a common scale; for those, alignment is always best-effort.
 
+\noindent
+The relationship between a posit and its complement can be visualized geometrically (Figure~\ref{Figure:boundsym}). The dashed diagonal represents the symmetry condition as a conversion map into canonical form: a certainty stated for the complement is reflected across that line into the equivalent signed certainty for the posit itself. The thick solid lines represent the bounded condition: they mark the admissible limits on the simultaneous certainties a positor may hold for a value and its complement.
+
 \begin{figure}[pos=htbp]
 \centering
 \includegraphics[width=0.25\linewidth]{v_and_not_v.pdf}
-\caption{Signed certainty for a value $v$ and its negation \emph{not} $v$.}
+\caption{Allowed certainty relationships for a value $v$ and its complement \emph{not} $v$. The dashed line represents the symmetry condition, used to convert certainty about the complement into canonical form (\(c=-d\)). The thick solid lines represent the bounded conditions (\(c+d=1\) and \(c+d=-1\)), which limit the simultaneous certainties a positor may hold for both.}
 \label{Figure:boundsym}
 \end{figure}
 
