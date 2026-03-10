@@ -669,41 +669,40 @@ These four examples cover the principal idioms: snapshot queries, assertion-laye
 
 \subsection{Exchange Format Sketch}
 \noindent
-Nothing in the formalism requires a specific wire format, but a concrete exchange representation helps illustrate how posits and assertions can move between autonomous parties without prior reconciliation. One compact JSON-style representation is:
+Nothing in the formalism requires a specific wire format, but a concrete exchange representation helps illustrate how posits and assertions can move between autonomous parties without prior reconciliation. Because assertions are themselves posits, a faithful exchange format need only serialize posits uniformly. One compact JSON-style representation is:
 \begin{quote}
 \small
 \begin{verbatim}
 {
-  "posit": {
-    "id": "p-1027",
-    "appearance_set": [
-      {"id": "x-44", "role": "has diagnosis"}
-    ],
-    "value": "Type 2 diabetes",
-    "appearance_time": "2026-03-01"
-  }
+  "id": "p-1027",
+  "appearance_set": [
+    {"id": "x-44", "role": "has diagnosis"}
+  ],
+  "value": "Type 2 diabetes",
+  "appearance_time": "2026-03-01"
 }
 \end{verbatim}
 \end{quote}
 
 \noindent
-An assertion about that posit can then be exchanged as an ordinary posit over the reserved roles:
+An assertion about that posit is then exchanged using the very same structure, differing only in the reserved roles present in the appearance set:
 \begin{quote}
 \small
 \begin{verbatim}
 {
-  "assertion": {
-    "posit_id": "p-1027",
-    "positor_id": "hospital-A",
-    "certainty": 0.75,
-    "assertion_time": "2026-03-02"
-  }
+  "id": "a-204",
+  "appearance_set": [
+    {"id": "p-1027", "role": "posit"},
+    {"id": "hospital-A", "role": "ascertains"}
+  ],
+  "value": 0.75,
+  "appearance_time": "2026-03-02"
 }
 \end{verbatim}
 \end{quote}
 
 \noindent
-If another party sends a distinct posit with its own internal identifier but the same role/value/time pattern, the receiver may either align the two through sufficient auxiliary information or preserve them as separate until such alignment becomes possible. The exchange format therefore needs only to preserve the core structure faithfully: appearance-role pairs, value, appearance time, and, for assertions, the asserted posit, the positor, certainty, and assertion time. Richer profiles could add explicit typing, vocabulary identifiers, signatures, or payload normalization rules, but these are conventions layered \emph{on top of} the representation rather than additional primitives within it.
+If another party sends a distinct posit with its own internal identifier but the same role/value/time pattern, the receiver may either align the two through sufficient auxiliary information or preserve them as separate until such alignment becomes possible. The exchange format therefore needs only to preserve the core posit structure faithfully: appearance-role pairs, value, and appearance time. Assertion semantics arise from the reserved roles \textit{posit} and \textit{ascertains}, not from a second envelope type. Richer profiles could add explicit typing, vocabulary identifiers, signatures, or payload normalization rules, but these are conventions layered \emph{on top of} the representation rather than additional primitives within it.
 
 \section{Conclusion and Future Work}
 \noindent
