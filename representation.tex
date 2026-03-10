@@ -56,7 +56,7 @@
 \cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Conventional data models represent facts reasonably well, but they struggle when several sources disagree, revise earlier statements, or express different levels of confidence about what held when. This is not only a storage problem but an exchange problem: information often needs to pass between parties before they fully agree on identifiers, schema, confidence scales, or value conventions. Such situations are often handled by ad hoc combinations of provenance fields, temporal extensions, and conflict-resolution rules, which either discard information too early or treat assertions as a separate kind of object from the facts they concern. The deeper problem is the continued expectation that there should already be a single version of the truth at capture time.
+Conventional data models represent facts reasonably well, but they struggle when several sources disagree, revise earlier statements, or express different levels of confidence about what held when. This is not only a storage problem but an exchange problem: information often needs to pass between parties before they fully agree on identifiers, schema, confidence scales, or value conventions. Such situations are often handled by ad hoc combinations of provenance fields, temporal extensions, and conflict-resolution rules, which either discard information too early or treat assertions as a separate kind of object from the facts they concern. The deeper problem is the continued expectation that there should already be a single version of the truth at capture time. In this paper \emph{data} and \emph{information} are used interchangeably, with \emph{information} emphasizing asserted, contextualized claims rather than bare values.
 
 This paper introduces \emph{transitional representation}, a formalism built around one primitive: the \emph{posit}, an \(n\)-ary statement with an appearance time. Facts, classifications, and even assertions about other statements are all represented as posits; an assertion is simply a posit over reserved roles that links a source to another posit together with an assertion time and a signed certainty in the interval \([-1,1]\). This yields a uniform representation for storage and exchange of ordinary facts, disagreement, retractions, corrections, and recursive meta-commentary without adding extra representational machinery.
 
@@ -64,7 +64,7 @@ The paper defines a minimal class layer in the same terms, showing that class me
 \end{abstract}
 
 \begin{keywords}
-transitional \sep posit \sep assertion \sep information exchange \sep bitemporality \sep uncertainty
+transitional \sep posit \sep assertion \sep information exchange \sep concurrency \sep bitemporality \sep uncertainty
 \end{keywords}
 
 \maketitle
@@ -130,7 +130,7 @@ An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of app
 A \emph{posit}~\cite{Oxford} is a triple, \(\left[\Upsilon, v, t_{\mathrm{app}}\right]\), where the first element is an appearance set, the second a data value, and the third a time point. The domain \(\mathbb{t}\) from which time points are taken is called \emph{appearance time}.}{posit}
 
 \noindent
-\textbf{Why this primitive.} The point of the posit is not merely to encode a fact as a triple, but to make three requirements coincide in one primitive: first-order facts may be stated directly; higher-order commentary can later target those statements without changing representational machinery; and temporal change is attached to the same unit that is being asserted and revised. A weaker primitive would force at least one of these concerns --- n-ary participation, meta-assertion, or temporal transition --- into auxiliary structures, thereby making the representation of disagreement and revision depend on conventions outside the core formalism.
+\textbf{Why this primitive.} The point of the posit is not merely to encode a fact as a triple, but to make three requirements coincide in one primitive: first-order facts may be stated directly; higher-order commentary can later target those statements without changing representational machinery; and temporal change is attached to the same unit that is being asserted and revised. A weaker primitive would force at least one of these concerns --- n-ary participation, meta-assertion, or temporal transition --- into auxiliary structures (as in RDF and property graphs; Section~\ref{Sec:rdf}), thereby making the representation of disagreement and revision depend on conventions outside the core formalism.
 
 \noindent
 \textbf{Interpretation.} A posit states that an appearance set \(\Upsilon\) has value \(v\) from (and including) appearance time \(t_{\mathrm{app}}\) onward, until another posit with the same appearance set becomes applicable. Appearance sets are permanent anchors of change: they remain in the body of information indefinitely, even after the entities they reference no longer exist, because history must remain queryable.
@@ -341,10 +341,10 @@ A body of information is said to be \emph{universal} iff positors agree on all a
 Without universality, disagreement cannot be interpreted as disagreement about the same referent. Operationally, universality is satisfied when positors can align identifiers through a common identification process: if two positors both reference the appearance \((X, \textit{has beard})\) because sufficient auxiliary information led them to the same internal identifier \(X\), they are already universal with respect to that appearance. This connects universality to the Note on Identifiers in Section~\ref{Sec:posits} --- shared reference is an identification problem, not a representational one. A body in which positors share some but not all identifiers is not ill-formed in any deeper sense; the well-formedness properties simply apply only where shared reference exists, leaving unshared appearances outside any cross-positor comparison. Together, the four properties yield:
 
 \deffy{def. of comprehensive}{%
-A body of information is said to be \emph{comprehensive} iff it is symmetric, canonical, bounded, exclusive, and universal.}{comprehensive}
+A body of information is said to be \emph{comprehensive} iff it is symmetric, bounded, exclusive, and universal.}{comprehensive}
 
 \noindent
-From here on all bodies of information are assumed to be comprehensive. In a concrete implementation such as Positorium~\cite{Positorium}, these properties may serve as integrity constraints: the system can normalise symmetric statements into canonical form and reject assertions that would violate exclusivity or boundary rules. They can equally be applied as diagnostic criteria to audit an existing body of information after unrestricted assertions have been stored. This means the representation need not force logical consistency at capture time: one may admit raw, even mutually inconsistent, assertions and then determine mathematically which positors are internally coherent, indecisive, or contradictory under the definitions below. Two further properties pertain to the \emph{information in effect} rather than to individual assertions:
+From here on all bodies of information are assumed to be comprehensive and presented in canonical form (Definition~\ref{Def:canonical}). In a concrete implementation such as Positorium~\cite{Positorium}, these properties may serve as integrity constraints: the system can normalise symmetric statements into canonical form and reject assertions that would violate exclusivity or boundary rules. They can equally be applied as diagnostic criteria to audit an existing body of information after unrestricted assertions have been stored. This means the representation need not force logical consistency at capture time: one may admit raw, even mutually inconsistent, assertions and then determine mathematically which positors are internally coherent, indecisive, or contradictory under the definitions below. Two further properties pertain to the \emph{information in effect} rather than to individual assertions:
 
 \deffy{def. of decisive and indecisive}{%
 When multiple assertions by the same positor are in effect for posits with the same appearance set but different values, that positor is \emph{indecisive} with respect to that appearance set; when exactly one such assertion is in effect, the positor is \emph{decisive}. A body of information is \emph{decisive} if no indecisive positor exists in any information in effect, and \emph{indecisive} otherwise.}{decisiveness}
@@ -385,9 +385,13 @@ with \(c\neq 0\) and \(T < T'\).}{retraction}
 
 \deffy{def. of a correction}{%
 Let \(\mathbb{A}\) be a body of information. The three assertion posits
-\(a_1 = \left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T\right]\),
-\(a_2 = \left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, 0.0, T'\right]\), and
-\(a_3 = \left[\{(p'_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c', T'\right]\)
+\[
+\begin{aligned}
+a_1 &= \left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T\right] \\
+a_2 &= \left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, 0.0, T'\right] \\
+a_3 &= \left[\{(p'_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c', T'\right]
+\end{aligned}
+\]
 form a \emph{correction} when \(p_{id} \neq p'_{id}\), \(c\neq 0\), \(c'\neq 0\), and \(T < T'\).}{correction}
 
 \subsection{Resolution of posits and assertions}
@@ -627,7 +631,7 @@ $\textit{pattern}$ & $\to$ $\textit{name}?$\; \texttt{[}\;\textit{appset},\;\tex
 $\textit{as\_of}$ & $\to$ \texttt{as of} $(\textit{time} \mid \textit{variable} \mid \texttt{@NOW})$ \\
 \end{tabular}
 \end{quote}
-Variables bind identities ({\small\texttt{+var}} creates and binds a new identity, {\small\texttt{var}} recalls a bound one), while {\small\texttt{*}} is a wildcard that matches without binding. In a multi-pattern search, variable bindings are shared across patterns, so a binding established in one clause constrains the next.
+Variables bind identities ({\small\texttt{+var}} creates and binds a new identity, {\small\texttt{var}} recalls a bound one), while {\small\texttt{*}} is a wildcard that matches without binding. When a \texttt{+var} appears in a value or time position it binds the matched datum rather than creating a new identifier. In a multi-pattern search, variable bindings are shared across patterns, so a binding established in one clause constrains the next.
 
 \noindent
 The \texttt{as of} clause is the direct syntactic realization of posit resolution $\rho(\mathbb{P}, t_{@})$ (Definition~\ref{Def:resolution}): it reduces the matching posits for each appearance set to the latest one or ones at or before the given time, implementing a snapshot query. Omitting \texttt{as of} returns the full history. Multiple patterns in one \texttt{search} may carry independent \texttt{as of} clauses whose cut points can refer to variables bound by earlier patterns, realising the data-dependent stratified cuts described in Section~\ref{Sec:temporal}.
