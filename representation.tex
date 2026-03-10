@@ -157,7 +157,7 @@ and, for a relationship:
 Posits are treated as syntactical items towards which different actors may hold different and evolving opinions. To bring posits meaning while keeping a uniform representation, assertions are represented as posits themselves---meta-posits that bind a posited statement to a \emph{positor}, a signed certainty, and an assertion time.
 
 \deffy{def. of an assertion}{%
-An \emph{assertion} is a posit on the form
+Reserve the roles \textit{posit} and \textit{ascertains} for assertion posits. An \emph{assertion} is a posit on the form
 $$\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T_{\mathrm{ast}}\right]$$
 where \(p_{id}\) identifies the posit being asserted, \(s_{id}\) identifies the \emph{positor} (source), \(T_{\mathrm{ast}}\in\mathbb{T}\) is \emph{assertion time}, and \(c\in[-1,1]\) is \emph{signed certainty}.}{assertion}
 
@@ -180,7 +180,13 @@ p_{2} = [\{(A, \textit{has beard})\},\;&& \textrm{shaved clean},\;&& \textrm{10:
 \end{alignat*}
 
 \noindent
-Before turning to temporal resolution, it is useful to show one further consequence of this uniformity: the same primitive can also carry a minimal schema layer. The class construction below is therefore not a digression from the core argument, but an early demonstration that the posit is meant to support both domain-level statements and lightweight model structure without introducing a second representational apparatus. The temporal machinery that follows then applies uniformly to both.
+If one assumes a single privileged positor (or universal unqualified assertion of every posit), \(p_1\) and \(p_2\) read straightforwardly as a transition: Archie had a fluffy red beard from 10:00 and was shaved clean from 10:02, implying that he shaved at some point between those times. In the running example, however, the two posits are not jointly asserted as one authoritative history; they are competing source statements made close in time. Assertions therefore matter even when appearance times differ: they determine which posits each positor endorses, and they preserve the fact that ``10:00 fluffy red'' and ``10:02 shaved clean'' may reflect disagreement between sources rather than a true two-minute transition in the world.
+
+\noindent
+These two assertions express two different positors' beliefs about two different appearance-time posits for the same appearance set \(\{(A,\textit{has beard})\}\). They are therefore compatible as stored information, yet they motivate resolution at query time: one may wish to know what each positor believed as of a given assertion time about what held as of a given appearance time, and how that belief changes through retractions and corrections.
+
+\noindent
+Before formalizing temporal resolution, it is useful to show one further consequence of this uniformity: the same primitive can also carry a minimal schema layer. The class construction below is therefore not a digression from the core argument, but an early demonstration that the posit is meant to support both domain-level statements and lightweight model structure without introducing a second representational apparatus. The temporal machinery that follows then applies uniformly to both.
 
 \subsection{A Minimal Class Layer}
 \deffy{def. of a class and a classifier}{%
