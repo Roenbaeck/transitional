@@ -1,5 +1,10 @@
 # Copilot instructions
 
+## Target files
+- We are currently working on a new version of the paper, contained in representation.tex. There is an old sketch of a paper in transitional.tex, a bunch of blog posts in MOTIVATION.md, journal guidelines in GUIDELINES.md, and information about the Traqula query language in TRAQULA.md, traqula.pest, and traqula.rs.
+
+There is also a living document of feedback from reviewers in FEEDBACK.md, in which the whole content is replaced when new feedback is added, so it is not a good candidate for copilot instructions. 
+
 ## Context
 - This repository is a LaTeX project (Tufte classes).
 - LaTeX is **not installed locally** in this workspace environment.

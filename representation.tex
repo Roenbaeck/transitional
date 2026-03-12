@@ -336,6 +336,8 @@ for which there exists an earlier assertion
 \(\left[\{(p_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c, T\right] \in \mathbb{A}\)
 with \(c\neq 0\) and \(T < T'\).}{retraction}
 
+\textbf{Note on logical retraction vs.\ physical deletion.} A retraction (\(c=0\)) expresses a source's logical withdrawal of confidence by adding a new posit to \(\mathbb{A}\), leaving the retracted posit in place. Consequently, a body of information grows monotonically at the logical level: no posit is ever removed. In practice, implementations may need to \emph{physically} delete posits to reclaim storage or to satisfy legal mandates (e.g., the right to be forgotten). Physical deletion simply removes a posit from \(\mathbb{A}\); any assertion posit that referenced its identifier becomes a dangling reference, which a query engine handles by treating the missing posit as absent from any resolved slice. Such storage lifecycle decisions are an operational concern outside the representation layer.
+
 \deffy{def. of a correction}{%
 Let \(\mathbb{A}\) be a body of information. The three assertion posits
 \[
@@ -529,7 +531,7 @@ The property graph model, recently standardised as ISO/IEC GQL~\cite{GQL}, suppo
 
 \section{A Query Language Sketch: Traqula}
 \label{Sec:traqula}
-The reference implementation Positorium~\cite{Positorium} exposes a domain-specific query and mutation language called Traqula (\emph{transitional query language}). The grammar below (abridged from the formal PEG grammar) captures its essential structure:
+The reference implementation Positorium~\cite{Positorium} exposes a domain-specific query and mutation language called Traqula (\emph{transitional query language}).\footnote{Positorium has been in open-source development since 2017 and Traqula since 2021. The name is distinct from, and predates, unrelated tools in the Semantic Web community that share the same acronym.} The grammar below (abridged from the formal PEG grammar) captures its essential structure:
 \begin{quote}
 \small
 \begin{tabular}{r l}
@@ -635,7 +637,7 @@ This system perspective clarifies the motivation further. Traditional databases 
 
 A reference implementation named Positorium~\cite{Positorium} demonstrates the feasibility of the approach. Positorium is an experimental database engine written in Rust~\cite{Matsakis} that stores data as posits and exposes Traqula, a query and mutation language whose core idioms are described in Section~\ref{Sec:traqula}. Internally it uses a hypergraph representation in which each appearance set is encoded as a bitset over integer-keyed identifiers; set membership and intersection therefore run in $O(n/64)$ rather than $O(n)$ using SIMD-word arithmetic, following the Roaring Bitmap approach of~\cite{Chambi}. This makes the grouped-maxima steps of posit and assertion resolution performant over large in-memory bodies of information.
 
-Future work includes richer typing beyond the minimal class layer formalized here, model bootstrapping within the representation itself, explicit treatment of exchange conventions for role vocabularies, value spaces, certainty calibration, and timestamp interpretation, richer value and time types for representing imprecision directly (for example ranges or other structured temporal/value expressions), constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information, fuller treatment of recording and structuring histories in implementations, and empirical evaluation of storage and query strategies for large bodies of assertions. Identification --- the process of establishing which identifier to use --- remains outside the representation layer as a deliberate design boundary: it is a subjective process, of which key-based lookup is only a reproducible special case under prior agreement.
+Future work includes richer typing beyond the minimal class layer formalized here, model bootstrapping within the representation itself, explicit treatment of exchange conventions for role vocabularies, value spaces, certainty calibration, and timestamp interpretation, richer value and time types for representing imprecision directly (for example ranges or other structured temporal/value expressions), constraint evaluation (e.g., higher-order cardinality) over indecisive bodies of information, fuller treatment of recording and structuring histories in implementations, storage lifecycle policies (physical pruning, archiving, and compliance-driven deletion to address unbounded growth and privacy mandates such as the right to be forgotten), and empirical evaluation of storage and query strategies for large bodies of assertions. Identification --- the process of establishing which identifier to use --- remains outside the representation layer as a deliberate design boundary: it is a subjective process, of which key-based lookup is only a reproducible special case under prior agreement.
 
 \begin{thebibliography}{99}
 
