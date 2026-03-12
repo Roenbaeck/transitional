@@ -209,12 +209,49 @@ Class-level disagreement is resolvable at query time by the same \emph{informati
 \textbf{Expressivity of the minimal layer.}
 The class layer as defined supports: class naming, class membership, subclass relationships by chaining, class transitions over time (a later classifier posit supersedes an earlier one for the same \textit{thing}/\textit{class} pair), and disputed membership or hierarchy at any level. It does not natively support class disjointness constraints (nothing prevents the same identifier from simultaneously belonging to classes that a domain rule would deem mutually exclusive), cardinality constraints (a positor can freely classify as many identifiers under one class as they wish), or closed-world assumptions (the absence of a classifier posit implies nothing about non-membership). These limitations belong to the representation layer by design: richer constraints and policies are the province of a schema and constraint layer that can itself be represented as posits in the same formalism, deferring enforcement to query time or to a dedicated validation pass. For example, cardinality constraints can themselves be represented by reserved-role posits, with fulfillment checked per positor and per information in effect.
 
-\textbf{Example constraint posit.}
-Suppose a domain wishes to express that a person should have at most one active legal spouse at a time. One may reserve roles such as \textit{constrained role}, \textit{maximum cardinality}, and \textit{constraint kind}, then posit
-\begin{align*}
-r_{1} = [\{(R_{\mathrm{spouse}}, \textit{constrained role}), (K_{\mathrm{max1}}, \textit{constraint kind})\}, 1, \textrm{2024\text{-}01\text{-}01}]
-\end{align*}
-to represent the constraint itself, with ordinary assertion posits recording which positors endorse it and when. The representation layer merely preserves this rule as information. Enforcement is a consumer or validation task: for a chosen information in effect, one checks whether any identifier simultaneously participates in more than one active posit using the role \(R_{\mathrm{spouse}}\). If different positors disagree about the constraint, that disagreement is again represented and resolved in the same way as disagreement about ordinary domain facts.
+\textbf{Constraint posits and cardinality.}
+To state constraints precisely, it is useful to define the type of a posit in terms of the classes of its participants.
+
+\deffy{def. of a posit type}{%
+A \emph{posit type}, \(\typeof{p} = [\{(c_1, r_1), \ldots, (c_n, r_n)\}, \typeof{v}, \typeof{t}]\), for a posit \(p = [\{(i_1, r_1), \ldots, (i_n, r_n)\}, v, t]\), is a structure obtained by replacing each identifier \(i_k\) with the identifier of its class \(c_k\), the value \(v\) with its data type \(\typeof{v}\), and the time \(t\) with its data type \(\typeof{t}\).}{posittype}
+
+Two posits have the same type when they share the same role set, the same class assignment for each role, the same value type, and the same time type. Constraints are stated over posit types rather than individual posits.
+
+\deffy{def. of a limiter}{%
+A \emph{limiter} is a triple \((R, l, u)\), where \(R = \{r_1, \ldots, r_n\}\) is a non-empty set of roles, \(l\) is a positive integer, and \(u\) is either a positive integer with \(l \leq u\) or the special value \(*\) (``unlimited'').}{limiter}
+
+The intention of a limiter is to bound how many times an identifier (or combination thereof) may appear in a given set of roles.
+
+\deffy{def. of a cardinality constraint}{%
+A \emph{cardinality constraint} over a posit type \(\typeof{p}\) with more than one role is a set of limiters \(\{L_1, \ldots, L_n\}\), \(n > 1\), where each \(L_i = (R_i, l_i, u_i)\) and every \(r \in R_i\) is a role in \(\typeof{p}\), with the \(R_i\) pairwise disjoint.}{constraint}
+
+The restriction to multi-role posit types is intentional: a cardinality constraint bounds co-occurrence of identifiers across \emph{different} roles, which requires at least two. Unary posit types (properties) can still be subject to value-count constraints --- for example, ``a person has at most one legal name at a time'' --- but such constraints reduce to counting distinct values for a single appearance set within each information in effect and do not require the limiter machinery above.
+
+\deffy{def. of decisive fulfillment}{%
+A cardinality constraint is said to be \emph{fulfilled} in a decisive body of information if, among all posits sharing the same posit type, the identifiers in the roles specified by each limiter appear at least \(l\) times and at most \(u\) times, checked independently for each positor and every information in effect.}{fulfillment}
+
+Checking per positor rather than globally is essential: two positors may each hold individually consistent views that would jointly violate a constraint, without either positor contradicting themselves. Fulfillment is intentionally defined only for decisive bodies of information. In an indecisive body, a positor who asserts two competing values for the same appearance set with partial certainty may or may not violate a cardinality constraint depending on interpretation. For example, if Eliot asserts with \(c = 0.50\) that Archie is married to Bella and simultaneously with \(c = 0.50\) that Archie is married to Fanny, a monogamy constraint is ambiguous: Eliot may mean that Archie is married to both, or that exactly one marriage is fact but the positor is unsure which. Cardinality in indecisive bodies therefore requires additional treatment and is left as future work.
+
+\textsc{Worked example (monogamy).} Returning to the running example, suppose that Archie and Bella were previously married. Using the roles \textit{husband} and \textit{wife}, a posit type \(\typeof{p_w}\) describes a marriage between two persons. Consider four wedding-related posits:
+\begin{alignat*}{3}
+p_{1w} &= [\{(A, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2004}] \\
+p_{2w} &= [\{(A, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{divorce},\;&& \textrm{2009}] \\
+p_{3w} &= [\{(A, \textit{husband}), (F, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2012}] \\
+p_{4w} &= [\{(G, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2012}]
+\end{alignat*}
+The monogamy constraint on \(\typeof{p_w}\) is \(\{(\{\textit{husband}\}, 1, 1), (\{\textit{wife}\}, 1, 1)\}\). Now let a single positor \(E\) assert all four posits decisively with \(c = 1\):
+\begin{alignat*}{3}
+[\{(p_{1w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Sunday}] \\
+[\{(p_{2w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Sunday}] \\
+[\{(p_{3w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Sunday}] \\
+[\{(p_{4w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{Sunday}]
+\end{alignat*}
+The information in effect at \((\textrm{Sunday}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{Sunday}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{Sunday}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). At no cut does any husband identifier appear with more than one wife identifier, so the constraint is fulfilled. Now suppose Archie and Bella each also assert \(p_{1w}\) with \(c = 1\). Those assertions enter each information-in-effect set, but they are made by \emph{different} positors and are therefore checked independently; the constraint remains fulfilled.
+
+\deffy{def. of a limiting and a limit}{%
+Reserve the role \textit{is limit}. A posit \([\{(\mathcal{L}, \textit{is limit})\}, L, t]\) defines a \emph{limit} by binding the limiter \(L\) to an identifier \(\mathcal{L}\). A \emph{limiting} is a posit \([\{(\mathcal{T}, \textit{type}), (\mathcal{L}, \textit{limit})\}, v, t]\) that binds a posit-type identifier \(\mathcal{T}\) to a limit identifier \(\mathcal{L}\).}{limiting}
+
+When limitings are asserted, constraints become part of the information itself: they can evolve over time, be valid only during certain periods, and be endorsed or disputed by different positors, just like any other posit. Declaring constraints in the formalism is therefore straightforward; the complexity lies in enforcement, which must be checked for each positor and every information in effect.
 
 \section{Epistemic Properties of the Model}
 \textbf{Imprecision versus uncertainty.} Two distinct concepts govern how a posit relates to the world. \emph{Imprecision} is a property of values: a value such as \textit{fluffy red}, \textit{approximately noon}, or \textit{Person} applies to a range of possible realities rather than to one perfectly delimited state. Yet when a positor makes an assertion, that imprecision is evaluated \emph{crisply}: from the positor's point of view the actual beard color either counts as \textit{fluffy red} or it does not; the observed time either counts as \textit{approximately noon} or it does not. \emph{Uncertainty}, by contrast, is subjective and contextual: it is the degree of belief a positor holds towards the posit after making that evaluation, given their own information and viewpoint.
@@ -286,7 +323,7 @@ The next property bounds the certainties for a value and its complement so they 
 \deffy{def. of bounded}{%
 A body of information is said to be \emph{bounded} iff the certainties in the assertion posits \([\{(p,\textit{posit}),(S,\textit{ascertains})\},c,T]\) and \([\{(\bar{p},\textit{posit}),(S,\textit{ascertains})\},d,T]\) satisfy \(c + d \in \{-1, 0, 1\}\) (equivalently, the fixed-point identity \(\abs{c + d} = \abs{c + d}^2\) holds).}{boundary}
 
-For example, if Charlie asserts \(c = 0.75\) for ``fluffy red'', boundary implies \(d = 0.25\) for ``not fluffy red''. The symmetry and bounded conditions on the certainty scale are illustrated in Figure~\ref{Figure:boundsym}. The next property prevents a positor from simultaneously holding two different certainties for the very same posit:
+For example, if Charlie asserts \(c = 0.75\) for ``fluffy red'', boundary implies \(d = 0.25\) for ``not fluffy red''. Requiring full complementarity rather than the weaker Dempster-Shafer inequality \(c + d \leq 1\) keeps the signed scale self-contained: the budget used in the non-contradiction formula is determined entirely by the stored certainties, with no residual uncommitted mass that would require separate tracking. Note that when both certainties are negative --- e.g.\ \(c = -0.6\) and \(d = -0.4\), giving \(c + d = -1\) --- the positor disbelieves both \(v\) and its complement \(\bar{v}\). This case is coherent only in a domain with more than two alternatives, where the remaining commitment flows toward those further values; in a strictly binary domain with no additional values it is incoherent and should be excluded by a domain-level constraint. The symmetry and bounded conditions on the certainty scale are illustrated in Figure~\ref{Figure:boundsym}. The next property prevents a positor from simultaneously holding two different certainties for the very same posit:
 
 \deffy{def. of exclusive}{%
 A body of information is said to be \emph{exclusive} iff no two assertions by the same positor for the same posit differ only in certainty.}{exclusive}
@@ -350,6 +387,8 @@ a_3 &= \left[\{(p'_{id}, \textit{posit}), (s_{id}, \textit{ascertains})\}, c', T
 form a \emph{correction} when \(p_{id} \neq p'_{id}\), \(c\neq 0\), \(c'\neq 0\), and \(T < T'\).}{correction}
 
 \subsection{Resolution of posits and assertions}
+\textsc{Scope.} Posit resolution \(\rho(\mathbb{P}, t_@)\) applies to any set of posits and requires no comprehensiveness assumption. The information in effect operator \(\mathbb{A}(T_@, t_@)\) additionally draws on the global assumption of comprehensiveness and canonical form (Definition~\ref{Def:comprehensive}): the bounded property underlies certainty interpretation and canonical form normalizes symmetric statements before selection. Results in this subsection that concern only \(\rho\) hold without that assumption.
+
 \textsc{Selection assumptions.} For the purposes of retrieval, any temporal domain used by a query is assumed to be totally ordered. This assumption concerns only the ordering required by the selection procedure. It does not deny that temporal expressions encountered in source information may be imprecise; rather, such imprecision must be evaluated, normalised, or otherwise made comparable before selection is applied.
 
 \deffy{def. of posit resolution}{%
@@ -547,6 +586,19 @@ $\textit{as\_of}$ & $\to$ \texttt{as of} $(\textit{time} \mid \textit{variable} 
 Variables bind matched components. {\small\texttt{+var}} binds whatever occurs in that position (identifier, value, or time), and {\small\texttt{var}} recalls a previously bound component; {\small\texttt{*}} is a wildcard that matches without binding. A binding can only be reused in positions that admit the same kind of component (e.g.\ a time binding can only appear where a time point is allowed). In a multi-pattern search, variable bindings are shared across patterns, so a binding established in one clause constrains the next.
 
 The \texttt{as of} clause is the direct syntactic realization of posit resolution $\rho(\mathbb{P}, t_{@})$ (Definition~\ref{Def:resolution}): it reduces the matching posits for each appearance set to the latest one or ones at or before the given time, implementing a snapshot query. Omitting \texttt{as of} returns the full history. Multiple patterns in one \texttt{search} may carry independent \texttt{as of} clauses whose cut points can refer to variables bound by earlier patterns, realising the data-dependent stratified cuts described in Section~\ref{Sec:temporal}.
+
+Certainties in Traqula are written as percentages in \([-100\%,\,100\%]\), mapping linearly to the signed scale \([-1,\,1]\) used throughout the formalism: \texttt{100\%}~\(\equiv 1\), \texttt{-100\%}~\(\equiv -1\), \texttt{0\%}~\(\equiv 0\) (complete uncertainty).
+
+\textsc{Example 0: mutation --- adding roles, posits, and assertions.} Traqula scripts may freely mix \texttt{add} and \texttt{search} statements. The fragment below declares two roles, inserts a domain posit for Archie's beard, then records an assertion by Charlie with 75\% certainty:
+\begin{quote}
+\small
+\begin{verbatim}
+add role has beard, ascertains;
+add posit +p [{(archie, has beard)}, "fluffy red", '2024-03-01T10:02'];
+add posit [{(p, posit), (charlie, ascertains)}, 75%, '2024-03-01T10:02'];
+\end{verbatim}
+\end{quote}
+The first \texttt{add posit} inserts the domain posit and binds the name \texttt{p} to its generated identifier. The second inserts an assertion posit using the reserved roles \textit{posit} and \textit{ascertains}: it links \texttt{p} to positor \texttt{charlie} with certainty \texttt{75\%}. Because assertions are themselves posits, the same \texttt{add posit} syntax covers domain facts and meta-commentary uniformly.
 
 \textsc{Example 1: state at a point in time.} The query below returns Archie's beard state as it would be reported using posit-level temporal resolution at \texttt{10:01}---the value of the latest posit for that appearance set at or before the cut:
 \begin{quote}
