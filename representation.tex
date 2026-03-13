@@ -277,48 +277,27 @@ This says that within wedding posits, for each husband currently in \(C_A\), at 
 \end{alignat*}
 This second policy says that, for each husband-wife combination, at most one distinct posit identity classified under \(C_{\mathrm{wedding}}\) may occur, regardless of what other roles some richer wedding posit family might also contain.
 
-Let a single positor \(E\) assert \(\mu_1\)--\(\mu_5\), \(\pi_1\)--\(\pi_5\), and all four wedding posits decisively with \(c = 1\):
-\begin{alignat*}{3}
-[\{(\mu_1, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\mu_2, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\mu_3, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\mu_4, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\mu_5, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\pi_1, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\pi_2, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\pi_3, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\pi_4, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\pi_5, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(p_{1w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(p_{2w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(p_{3w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(p_{4w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}]
-\end{alignat*}
+Let a single positor \(E\) assert \(\mu_1\)--\(\mu_5\), \(\pi_1\)--\(\pi_5\), and all four wedding posits decisively with \(c = 1\) at assertion time \(\textrm{2024\text{-}03\text{-}01}\).
+
 The information in effect at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). If Archie is currently classified under \(C_{A}\) and both Bella and Fanny are currently classified under \(C_{10}\), then \(p_{1w}\) and \(p_{3w}\) together would violate the upper bound of \(\kappa_{\mathrm{mono}}\), because a current member of \(C_{A}\) would occur with two counted wives from that class within the scoped wedding posit family. If Fanny is outside \(C_{10}\), then \(p_{3w}\) does not count against that policy, and Archie may still have one additional wife outside the constrained group. The couple-uniqueness policy \(\kappa_{\mathrm{pair}}\) is different: its context selector bundles husband and wife into a single grouping posit, and its target selector uses the \textit{posit class} role, so the counted unit is the posit identity itself. It would therefore be violated only if the same couple appeared in two concurrent wedding posits, for example if \((A,\textit{husband})\) and \((B,\textit{wife})\) were recorded in two distinct posits currently classified under \(C_{\mathrm{wedding}}\).
 
 The same machinery separates other constraints over reused roles. Suppose wedding posits and baptism posits both use the roles \textit{priest} and \textit{church}. Let \(C_{\mathrm{baptism}}\) classify baptism posits, let \(C_{\mathrm{priest}}\) classify priests, let \(C_{\mathrm{church}}\) classify churches, let \(C_{\mathrm{husband}}\) and \(C_{\mathrm{wife}}\) classify spouses in wedding posits, and let \(C_{\mathrm{child}}\) classify children in baptism posits. Then the posits
 \[
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\}, \textit{active}, t],
-\]
-\[
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
-\]
-\[
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband}), (C_{\mathrm{wife}}, \textit{wife})\}, \textit{target selector}, t],
-\quad
-[\{(\kappa_w, \textit{upper bound})\}, x, t]
+\begin{aligned}
+&[\{(\kappa_w, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\}, \textit{active}, t], \\
+&[\{(\kappa_w, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t], \\
+&[\{(\kappa_w, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband}), (C_{\mathrm{wife}}, \textit{wife})\}, \textit{target selector}, t], \\
+&[\{(\kappa_w, \textit{upper bound})\}, x, t]
+\end{aligned}
 \]
 state that, for each priest-church combination, at most \(x\) distinct husband-wife pairs may occur in wedding posits. Likewise, the posits
 \[
-[\{(\kappa_b, \textit{policy}), (C_{\mathrm{baptism}}, \textit{posit class})\}, \textit{active}, t],
-\]
-\[
-[\{(\kappa_b, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
-\quad
-[\{(\kappa_b, \textit{policy}), (C_{\mathrm{child}}, \textit{child})\}, \textit{target selector}, t],
-\]
-\[
-[\{(\kappa_b, \textit{upper bound})\}, y, t]
+\begin{aligned}
+&[\{(\kappa_b, \textit{policy}), (C_{\mathrm{baptism}}, \textit{posit class})\}, \textit{active}, t], \\
+&[\{(\kappa_b, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t], \\
+&[\{(\kappa_b, \textit{policy}), (C_{\mathrm{child}}, \textit{child})\}, \textit{target selector}, t], \\
+&[\{(\kappa_b, \textit{upper bound})\}, y, t]
+\end{aligned}
 \]
 state that, for each priest-church combination, at most \(y\) children may occur in baptism posits. Because the two policies are scoped by different posit classes, weddings and baptisms do not interfere even though they reuse the roles \textit{priest} and \textit{church}.
 
