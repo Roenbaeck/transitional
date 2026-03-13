@@ -189,6 +189,8 @@ Here \(q_{1}\) and \(q_{3}\) name two classes, while \(q_{2}\) says that Archie 
 
 A query over the information in effect can therefore treat class memberships and domain facts uniformly: ``Who was classified as a suspect on 2024-03-01?'' is handled by the same retrieval machinery as ``Who was observed with a beard at 10:00?''
 
+Since posit identifiers are themselves identifiers, the same classifier mechanism can also classify posits. A posit may therefore be classified as, for example, a 	extit{Wedding} posit or a 	extit{Baptism} posit without introducing any separate type construct. This will matter below when constraint policies need to distinguish different posit families that may reuse some of the same participant roles.
+
 \textbf{Subclass relationships.}
 Because a class identifier is itself just an identifier, it can appear in the \textit{thing} role of a classifier posit. To express that \textit{Suspect} is a subclass of \textit{Person}, one posits:
 \begin{align*}
@@ -207,56 +209,122 @@ The relationship between assertions and classification yields a further importan
 Class-level disagreement is resolvable at query time by the same \emph{information in effect} selection used for domain facts. Two queries with different resolution policies---say, one that trusts the investigator and one that trusts the defense counsel---will produce different effective classification frameworks, yet draw on the same underlying body of information without modification.
 
 \textbf{Expressivity of the minimal layer.}
-The class layer as defined supports: class naming, class membership, subclass relationships by chaining, class transitions over time (a later classifier posit supersedes an earlier one for the same \textit{thing}/\textit{class} pair), and disputed membership or hierarchy at any level. It does not natively support class disjointness constraints (nothing prevents the same identifier from simultaneously belonging to classes that a domain rule would deem mutually exclusive), cardinality constraints (a positor can freely classify as many identifiers under one class as they wish), or closed-world assumptions (the absence of a classifier posit implies nothing about non-membership). These limitations belong to the representation layer by design: richer constraints and policies are the province of a schema and constraint layer that can itself be represented as posits in the same formalism, deferring enforcement to query time or to a dedicated validation pass. For example, cardinality constraints can themselves be represented by reserved-role posits that bind limits to selected classes in particular roles, with fulfillment checked per positor and per information in effect.
+The class layer as defined supports: class naming, class membership, subclass relationships by chaining, class transitions over time (a later classifier posit supersedes an earlier one for the same \textit{thing}/\textit{class} pair), and disputed membership or hierarchy at any level. It does not natively support class disjointness constraints (nothing prevents the same identifier from simultaneously belonging to classes that a domain rule would deem mutually exclusive), cardinality constraints (a positor can freely classify as many identifiers under one class as they wish), or closed-world assumptions (the absence of a classifier posit implies nothing about non-membership). These limitations belong to the representation layer by design: richer constraints and policies are the province of a schema and constraint layer that can itself be represented as posits in the same formalism, deferring enforcement to query time or to a dedicated validation pass. For example, cardinality constraints can themselves be represented by reserved-role posits that bind limits to selected classes in particular roles within a selected class of posits, with fulfillment checked per positor and per information in effect.
 
 \textbf{Constraint posits and cardinality.}
-Global cardinality constraints over an entire posit family are often too coarse. A domain may require that some classes of entities be subject to one cardinality policy while others are not, or that the same entity be constrained in one role but not another by virtue of belonging to different classes. It is therefore more useful to represent cardinality as information that is attached to classes and whose current scope is determined through classification.
+Global cardinality constraints over an entire posit family are often too coarse. A domain may require that some classes of entities be subject to one cardinality policy while others are not, or that the same entity be constrained in one role but not another by virtue of belonging to different classes. It is therefore more useful to represent cardinality as information that is attached to classes and whose current scope is determined through classification. A policy need not mention every role of the posit family it governs: it may constrain any selected subset of roles within a chosen class of posits.
 
-\deffy{def. of lower and upper bounds}{%
-Reserve the roles \textit{lower bound} and \textit{upper bound}. Let \(\Theta = \{(c_1, r_1), \ldots, (c_n, r_n)\}\) be an appearance set in which every \(c_m\) is a class identifier, and let \((c_k, r_k) \in \Theta\) be the appearance whose participation is to be constrained. The posits
+Constraint formalisms themselves are of course well developed in the literature: relational dependencies provide the classical database treatment, conceptual modeling approaches such as ORM make cardinality and mandatory-role constraints central, and ontology languages such as OWL~2 include qualified cardinality restrictions~\cite{AbiteboulEtAl,HalpinMorgan,OWL2}. The concern here is therefore not to reintroduce constraints as such, but to show how they may themselves be represented as evolving, assertable, and disputable information inside the posit formalism.
+
+\deffy{def. of a cardinality policy}{%
+Reserve the roles \textit{policy}, \textit{posit class}, \textit{lower bound}, and \textit{upper bound}. A cardinality policy is identified by some identifier \(\kappa\). Let \(C_p\) be a class identifier selecting the posits to which the policy applies, let \(S_{\mathrm{ctx}}\) and \(S_{\mathrm{tgt}}\) be disjoint sets of appearances \((c, r)\), where every \(c\) is a class identifier and \(S_{\mathrm{tgt}}\neq\varnothing\). The policy is represented by the scope posit
 \[
-[\Theta \cup \{(\kappa, \textit{lower bound})\}, l, t]
-\qquad\text{and}\qquad
-[\Theta \cup \{(\kappa, \textit{upper bound})\}, u, t]
+[\{(\kappa, \textit{policy}), (C_p, \textit{posit class})\}, \textit{active}, t]
 \]
-define the lower and upper bounds of a cardinality policy \(\kappa\) for the constrained class appearance \((c_k, r_k)\), where \(l\) is a non-negative integer and \(u\) is either a non-negative integer with \(l \leq u\) or the special value \(*\) (``unlimited'').}{bounds}
+together with one selector posit
+\[
+[\{(\kappa, \textit{policy}), (c, r)\}, \textit{context selector}, t]
+\]
+for each \((c,r)\in S_{\mathrm{ctx}}\), one selector posit
+\[
+[\{(\kappa, \textit{policy}), (c, r)\}, \textit{target selector}, t]
+\]
+for each \((c,r)\in S_{\mathrm{tgt}}\), and the bound posits
+\[
+[\{(\kappa, \textit{lower bound})\}, l, t]
+\qquad\text{and}\qquad
+[\{(\kappa, \textit{upper bound})\}, u, t]
+\]
+where \(l\) is a non-negative integer and \(u\) is either a non-negative integer with \(l \leq u\) or the special value \(*\) (``unlimited'').}{policy}
 
-Each appearance in \(\Theta\) acts as a class selector: it selects whichever identifiers are currently classified under class \(c_m\) in role \(r_m\). The constrained class appearance determines which participants are being counted; the remaining selector appearances determine the subset within which the counting takes place.
+The scope posit selects the posit family to which the policy applies. The context-selector posits determine which role-bound classes define the grouping context in which the policy is evaluated. The target-selector posits determine which role-bound classes the policy applies to within that context. For cardinality in particular, these target selectors determine the unit that is counted. If several target selectors are present, the counted unit is the combination of the corresponding participants rather than any one of them in isolation.
 
-Because the bounds are themselves posits, applicability of a constraint becomes represented information: it can begin and end over time, be asserted by one positor and disputed by another, and differ across roles for the same underlying identifiers through changes in classification. A subset is therefore handled by defining or reusing the classes that should be governed and asserting bound posits over those classes.
+Because these components are themselves posits, applicability of a constraint becomes represented information: it can begin and end over time, be asserted by one positor and disputed by another, and differ across roles or posit families through changes in classification. The same identifiers established by naming and classifier posits in the minimal class layer are reused here. This covers policies that currently apply to just one identifier as well: such a case is represented by a class whose current membership happens to be a singleton. Likewise, if the policy should range only over wedding posits and not baptism posits, even though both may reuse roles such as \textit{priest} and \textit{church}, the relevant posit identifiers are simply classified separately and the policy refers to the appropriate posit class.
 
-The subset may itself be chosen through the class layer. If a community wants a particular cardinality policy to apply only to those currently classified as members of some group, or only within a particular legal framework, that classification can be represented exactly as above and then referenced directly from the selector appearances in the bound posits. The constraint mechanism itself remains simple: it only records lower and upper bounds as ordinary posits.
-The class identifiers used in those selector appearances are therefore not introduced specially for cardinality; they are the same identifiers already established by naming and classifier posits in the minimal class layer. This also covers policies that currently apply to just one identifier: such a case is represented by a class whose current membership happens to be a singleton. As those classifier posits change over time, the subset selected by a bound posit changes with them, which is exactly what one expects when the applicability of a constraint evolves together with membership in the governed group.
-Cardinality is only one instance of the general pattern: other constraint families can likewise be represented by reserving suitable roles and interpreting the resulting posits in a query-time or validation-time constraint layer, without adding new primitives to the representation itself.
-Even declarations of what a constraint posit is meant to mean may themselves be represented as further posits about those constraint posits, although the grounding interpretation of such declarations still belongs to the consuming schema or validation layer.
+Cardinality is only one instance of the general pattern: other constraint families can likewise be represented by reserving suitable roles and interpreting the resulting posits in a query-time or validation-time constraint layer, without adding new primitives to the representation itself. What changes from one constraint family to another is the reserved-role vocabulary and the value domain used by the policy posits, not the underlying posit machinery. Even declarations of what a constraint posit is meant to mean may themselves be represented as further posits about those constraint posits, although the grounding interpretation of such declarations still belongs to the consuming schema or validation layer.
 
 \deffy{def. of decisive fulfillment}{%
-A cardinality policy \(\kappa\), defined by lower- and upper-bound posits over \(\Theta\) for constrained class appearance \((c_k, r_k)\), is said to be \emph{fulfilled} in a decisive body of information if, for every positor and every information in effect, every identifier currently classified under \(c_k\) appears in role \(r_k\) at least the stored lower bound and at most the stored upper bound among posits whose other participants are currently classified under the corresponding selector classes in \(\Theta\).}{fulfillment}
+A cardinality policy \(\kappa\), represented by a posit class \(C_p\), a context-selector set \(S_{\mathrm{ctx}}\), a target-selector set \(S_{\mathrm{tgt}}\), and lower and upper bounds \(l\) and \(u\), is said to be \emph{fulfilled} in a decisive body of information if, for every positor and every information in effect, every fixed combination of identifiers matching the selector appearances in \(S_{\mathrm{ctx}}\) occurs together with at least \(l\) and at most \(u\) distinct combinations of identifiers matching the selector appearances in \(S_{\mathrm{tgt}}\), among posits that are currently classified under \(C_p\).}{fulfillment}
 
-Checking per positor rather than globally is essential: two positors may each hold individually consistent views that would jointly violate a constraint, without either positor contradicting themselves. This definition also resolves the scaling problem. A policy over one named group of ten women is expressed by referring to that group's class identifier in one selector appearance; a policy over one million men and one million women is expressed in exactly the same way, by referring to broad class identifiers such as \textit{Husband} and \textit{Wife}, rather than by materialising one constraint per possible pair. Fulfillment is intentionally defined only for decisive bodies of information. In an indecisive body, a positor who asserts two competing values for the same appearance set with partial certainty may or may not violate a cardinality constraint depending on interpretation. For example, if Eliot asserts with \(c = 0.50\) that Archie is married to Bella and simultaneously with \(c = 0.50\) that Archie is married to Fanny, a monogamy policy over the singleton class currently containing Archie is ambiguous: Eliot may mean that Archie is married to both, or that exactly one marriage is fact but the positor is unsure which. Cardinality in indecisive bodies therefore requires additional treatment and is left as future work.
+Checking per positor rather than globally is essential: two positors may each hold individually consistent views that would jointly violate a constraint, without either positor contradicting themselves. The formulation above also preserves subset-of-role expressiveness. A policy may target a single role, such as \(\{(C_{\mathrm{wife}},\textit{wife})\}\), or a combination of roles, such as \(\{(C_{\mathrm{husband}},\textit{husband}), (C_{\mathrm{wife}},\textit{wife})\}\), while ignoring all other roles in the scoped posit family. For cardinality, those targets are then counted. Because the policy is also scoped by a posit class, different relationships may reuse the same participant roles without collapsing into the same count. Fulfillment is intentionally defined only for decisive bodies of information. In an indecisive body, a positor who asserts two competing values for the same appearance set with partial certainty may or may not violate a cardinality constraint depending on interpretation. For example, if Eliot asserts with \(c = 0.50\) that Archie is married to Bella and simultaneously with \(c = 0.50\) that Archie is married to Fanny, a monogamy policy over the singleton class currently containing Archie is ambiguous: Eliot may mean that Archie is married to both, or that exactly one marriage is fact but the positor is unsure which. Cardinality in indecisive bodies therefore requires additional treatment and is left as future work.
 
-\textsc{Worked example (monogamy).} Returning to the running example, suppose that Archie and Bella were previously married. Using the roles \textit{husband} and \textit{wife}, consider four wedding-related posits:
+\textsc{Worked example (monogamy and couple uniqueness).} Returning to the running example, suppose that Archie and Bella were previously married. Using the roles \textit{husband} and \textit{wife}, consider four wedding-related posits:
 \begin{alignat*}{3}
 p_{1w} &= [\{(A, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2004}] \\
 p_{2w} &= [\{(A, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{divorce},\;&& \textrm{2009}] \\
 p_{3w} &= [\{(A, \textit{husband}), (F, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2012}] \\
 p_{4w} &= [\{(G, \textit{husband}), (B, \textit{wife})\},\;&& \textrm{marriage},\;&& \textrm{2012}]
 \end{alignat*}
-Now let \(C_{A}\) be a class whose current member is Archie, let \(C_{10}\) be a class whose members are the ten women within which that class should be monogamous, and let \(C_{\mathrm{mono}}\) name the policy:
+Now let \(C_{\mathrm{wedding}}\) be a class under which the four wedding posit identifiers are currently classified, let \(C_{A}\) be a class whose current member is Archie, let \(C_{10}\) be a class whose members are the ten women within which Archie should be monogamous, let \(C_{\mathrm{husband}}\) classify husbands, let \(C_{\mathrm{wife}}\) classify wives, let \(\kappa_{\mathrm{mono}}\) name the monogamy policy, and let \(\kappa_{\mathrm{pair}}\) name a couple-uniqueness policy.
+
+The monogamy policy is described by the following posits:
 \begin{alignat*}{3}
-\ell_1 &= [\{(C_{A}, \textit{husband}), (C_{10}, \textit{wife}), (C_{\mathrm{mono}}, \textit{lower bound})\},\;&& 0,\;&& \textrm{2004}] \\
-\ell_2 &= [\{(C_{A}, \textit{husband}), (C_{10}, \textit{wife}), (C_{\mathrm{mono}}, \textit{upper bound})\},\;&& 1,\;&& \textrm{2004}]
+\mu_1 &= [\{(\kappa_{\mathrm{mono}}, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\},\;&& \textit{active},\;&& \textrm{2004}] \\
+\mu_2 &= [\{(\kappa_{\mathrm{mono}}, \textit{policy}), (C_{A}, \textit{husband})\},\;&& \textit{context selector},\;&& \textrm{2004}] \\
+\mu_3 &= [\{(\kappa_{\mathrm{mono}}, \textit{policy}), (C_{10}, \textit{wife})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
+\mu_4 &= [\{(\kappa_{\mathrm{mono}}, \textit{lower bound})\},\;&& 0,\;&& \textrm{2004}] \\
+\mu_5 &= [\{(\kappa_{\mathrm{mono}}, \textit{upper bound})\},\;&& 1,\;&& \textrm{2004}]
 \end{alignat*}
-and let a single positor \(E\) assert \(\ell_1\), \(\ell_2\), and all four wedding posits decisively with \(c = 1\):
+This says that within wedding posits, for each husband currently in \(C_A\), at most one wife currently in \(C_{10}\) may occur. A different policy can count couples as pairs rather than wives singly:
 \begin{alignat*}{3}
-[\{(\ell_1, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
-[\{(\ell_2, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+\pi_1 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\},\;&& \textit{active},\;&& \textrm{2004}] \\
+\pi_2 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
+\pi_3 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{wife}}, \textit{wife})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
+\pi_4 &= [\{(\kappa_{\mathrm{pair}}, \textit{lower bound})\},\;&& 0,\;&& \textrm{2004}] \\
+\pi_5 &= [\{(\kappa_{\mathrm{pair}}, \textit{upper bound})\},\;&& 1,\;&& \textrm{2004}]
+\end{alignat*}
+This second policy says that, across wedding posits, each husband-wife combination may occur at most once as a couple, regardless of what other roles some richer wedding posit family might also contain.
+
+Let a single positor \(E\) assert \(\mu_1\)--\(\mu_5\), \(\pi_1\)--\(\pi_5\), and all four wedding posits decisively with \(c = 1\):
+\begin{alignat*}{3}
+[\{(\mu_1, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\mu_2, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\mu_3, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\mu_4, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\mu_5, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\pi_1, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\pi_2, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\pi_3, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\pi_4, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
+[\{(\pi_5, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
 [\{(p_{1w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
 [\{(p_{2w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
 [\{(p_{3w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
 [\{(p_{4w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}]
 \end{alignat*}
-The information in effect at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). If Archie is currently classified under \(C_{A}\) and both Bella and Fanny are currently classified under \(C_{10}\), then \(p_{1w}\) and \(p_{3w}\) together would violate \(\ell_2\), because a current member of \(C_{A}\) would have two concurrent wives from that class. If Fanny is outside \(C_{10}\), then \(p_{3w}\) does not count against the policy, and Archie may still have one additional wife outside the constrained group. This gives the selective behavior sought above. The same idea also scales: if one wants monogamy for all husbands over all wives, one replaces the classes \(C_{A}\) and \(C_{10}\) with broader class identifiers such as \(C_{\mathrm{husband}}\) and \(C_{\mathrm{wife}}\), so one pair of bound posits covers the full population. If \(C_{A}\) later acquires further members, the same policy automatically extends to them without changing the bound posits themselves. If Archie and Bella each also assert \(p_{1w}\) with \(c = 1\), those assertions enter each information-in-effect set, but they are made by \emph{different} positors and are therefore checked independently; the policy remains fulfilled.
+The information in effect at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). If Archie is currently classified under \(C_{A}\) and both Bella and Fanny are currently classified under \(C_{10}\), then \(p_{1w}\) and \(p_{3w}\) together would violate the upper bound of \(\kappa_{\mathrm{mono}}\), because a current member of \(C_{A}\) would occur with two counted wives from that class within the scoped wedding posit family. If Fanny is outside \(C_{10}\), then \(p_{3w}\) does not count against that policy, and Archie may still have one additional wife outside the constrained group. The couple-uniqueness policy \(\kappa_{\mathrm{pair}}\) is different: it counts husband-wife pairs as units. It would therefore be violated only if the same couple appeared twice within the scoped wedding family, for example if \((A,\textit{husband})\) and \((B,\textit{wife})\) were recorded in two concurrent wedding posits.
+
+The same machinery separates other constraints over reused roles. Suppose wedding posits and baptism posits both use the roles \textit{priest} and \textit{church}. Let \(C_{\mathrm{baptism}}\) classify baptism posits, let \(C_{\mathrm{priest}}\) classify priests, let \(C_{\mathrm{church}}\) classify churches, let \(C_{\mathrm{husband}}\) and \(C_{\mathrm{wife}}\) classify spouses in wedding posits, and let \(C_{\mathrm{child}}\) classify children in baptism posits. Then the posits
+\[
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\}, \textit{active}, t],
+\quad
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest})\}, \textit{context selector}, t],
+\]
+\[
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
+\quad
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband})\}, \textit{target selector}, t],
+\]
+\[
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{wife}}, \textit{wife})\}, \textit{target selector}, t],
+\quad
+[\{(\kappa_w, \textit{upper bound})\}, x, t]
+\]
+state that, for each priest-church combination, at most \(x\) distinct husband-wife pairs may occur in wedding posits. Likewise, the posits
+\[
+[\{(\kappa_b, \textit{policy}), (C_{\mathrm{baptism}}, \textit{posit class})\}, \textit{active}, t],
+\quad
+[\{(\kappa_b, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest})\}, \textit{context selector}, t],
+\]
+\[
+[\{(\kappa_b, \textit{policy}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
+\quad
+[\{(\kappa_b, \textit{policy}), (C_{\mathrm{child}}, \textit{child})\}, \textit{target selector}, t],
+\]
+\[
+[\{(\kappa_b, \textit{upper bound})\}, y, t]
+\]
+state that, for each priest-church combination, at most \(y\) children may occur in baptism posits. Because the two policies are scoped by different posit classes, weddings and baptisms do not interfere even though they reuse the roles \textit{priest} and \textit{church}.
 
 \section{Epistemic Properties of the Model}
 \textbf{Imprecision versus uncertainty.} Two distinct concepts govern how a posit relates to the world. \emph{Imprecision} is a property of values: a value such as \textit{fluffy red}, \textit{approximately noon}, or \textit{Person} applies to a range of possible realities rather than to one perfectly delimited state. Yet when a positor makes an assertion, that imprecision is evaluated \emph{crisply}: from the positor's point of view the actual beard color either counts as \textit{fluffy red} or it does not; the observed time either counts as \textit{approximately noon} or it does not. \emph{Uncertainty}, by contrast, is subjective and contextual: it is the degree of belief a positor holds towards the posit after making that evaluation, given their own information and viewpoint.
@@ -703,6 +771,11 @@ James F. Allen.
 \newblock Maintaining knowledge about temporal intervals.
 \newblock \emph{Communications of the ACM}, 26(11):832--843, 1983.
 
+\bibitem{AbiteboulEtAl}
+Serge Abiteboul, Richard Hull, and Victor Vianu.
+\newblock \emph{Foundations of Databases}.
+\newblock Addison-Wesley, 1995.
+
 \bibitem{Anchor}
 Lars Ronnback.
 \newblock \emph{Anchor Modeling}.
@@ -737,6 +810,11 @@ Matteo Golfarelli and Stefano Rizzi.
 Hans Hultgren.
 \newblock \emph{Modeling the Agile Data Warehouse with Data Vault}.
 \newblock New Hamilton, 2012.
+
+\bibitem{HalpinMorgan}
+Terry Halpin and Tony Morgan.
+\newblock \emph{Information Modeling and Relational Databases: From Conceptual Analysis to Logical Design}.
+\newblock Morgan Kaufmann, second edition, 2008.
 
 \bibitem{Johnston}
 Tom Johnston.
@@ -896,6 +974,12 @@ Simon Cox and Chris Little.
 \newblock Time Ontology in OWL.
 \newblock W3C Candidate Recommendation, November 2022.
 \newblock \url{https://www.w3.org/TR/owl-time/}
+
+\bibitem{OWL2}
+W3C OWL Working Group.
+\newblock \emph{OWL 2 Web Ontology Language Document Overview (Second Edition)}.
+\newblock W3C Recommendation, 2012.
+\newblock \url{https://www.w3.org/TR/owl2-overview/}
 
 \bibitem{Chambi}
 S.~Chambi, D.~Lemire, O.~Kaser, and R.~Godin.
