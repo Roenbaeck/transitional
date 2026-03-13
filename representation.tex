@@ -221,15 +221,15 @@ Reserve the roles \textit{policy}, \textit{posit class}, \textit{lower bound}, a
 \[
 [\{(\kappa, \textit{policy}), (C_p, \textit{posit class})\}, \textit{active}, t]
 \]
-together with one selector posit
+together with a context-selector posit
 \[
-[\{(\kappa, \textit{policy}), (c, r)\}, \textit{context selector}, t]
+[\{(\kappa, \textit{policy})\} \cup S_{\mathrm{ctx}}, \textit{context selector}, t]
 \]
-for each \((c,r)\in S_{\mathrm{ctx}}\), one selector posit
+if \(S_{\mathrm{ctx}} \neq \varnothing\), a target-selector posit
 \[
-[\{(\kappa, \textit{policy}), (c, r)\}, \textit{target selector}, t]
+[\{(\kappa, \textit{policy})\} \cup S_{\mathrm{tgt}}, \textit{target selector}, t]
 \]
-for each \((c,r)\in S_{\mathrm{tgt}}\), and the bound posits
+and the bound posits
 \[
 [\{(\kappa, \textit{lower bound})\}, l, t]
 \qquad\text{and}\qquad
@@ -237,7 +237,7 @@ for each \((c,r)\in S_{\mathrm{tgt}}\), and the bound posits
 \]
 where \(l\) is a non-negative integer and \(u\) is either a non-negative integer with \(l \leq u\) or the special value \(*\) (``unlimited'').}{policy}
 
-The scope posit selects the posit family to which the policy applies. The context-selector posits determine which role-bound classes define the grouping context in which the policy is evaluated. The target-selector posits determine which role-bound classes the policy applies to within that context. For cardinality in particular, these target selectors determine the unit that is counted. If several target selectors are present, the counted unit is the combination of the corresponding participants rather than any one of them in isolation.
+The scope posit selects the posit family to which the policy applies. The context-selector posit determines which role-bound classes define the grouping context in which the policy is evaluated. The target-selector posit determines which role-bound classes the policy counts within that context. If the target-selector posit contains several appearances, the counted unit is the combination of the corresponding participants rather than any one of them in isolation. When the reserved role \textit{posit class} appears in a selector, the matching identifier is the posit's own identity rather than an identifier filling one of the posit's roles; this allows a policy to count posits themselves. Because each selector is a single posit, a positor who disagrees with part of a selector asserts a competing selector posit with a different set of appearances.
 
 Because these components are themselves posits, applicability of a constraint becomes represented information: it can begin and end over time, be asserted by one positor and disputed by another, and differ across roles or posit families through changes in classification. The same identifiers established by naming and classifier posits in the minimal class layer are reused here. This covers policies that currently apply to just one identifier as well: such a case is represented by a class whose current membership happens to be a singleton. Likewise, if the policy should range only over wedding posits and not baptism posits, even though both may reuse roles such as \textit{priest} and \textit{church}, the relevant posit identifiers are simply classified separately and the policy refers to the appropriate posit class.
 
@@ -265,15 +265,15 @@ The monogamy policy is described by the following posits:
 \mu_4 &= [\{(\kappa_{\mathrm{mono}}, \textit{lower bound})\},\;&& 0,\;&& \textrm{2004}] \\
 \mu_5 &= [\{(\kappa_{\mathrm{mono}}, \textit{upper bound})\},\;&& 1,\;&& \textrm{2004}]
 \end{alignat*}
-This says that within wedding posits, for each husband currently in \(C_A\), at most one wife currently in \(C_{10}\) may occur. A different policy can count couples as pairs rather than wives singly:
+This says that within wedding posits, for each husband currently in \(C_A\), at most one wife currently in \(C_{10}\) may occur. A different policy can limit each couple to at most one wedding posit rather than counting wives singly. Here the \textit{posit class} role appears in the target selector, so the counted unit is the posit identity rather than a participant:
 \begin{alignat*}{3}
 \pi_1 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\},\;&& \textit{active},\;&& \textrm{2004}] \\
-\pi_2 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
-\pi_3 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{wife}}, \textit{wife})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
+\pi_2 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband}), (C_{\mathrm{wife}}, \textit{wife})\},\;&& \textit{context selector},\;&& \textrm{2004}] \\
+\pi_3 &= [\{(\kappa_{\mathrm{pair}}, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\},\;&& \textit{target selector},\;&& \textrm{2004}] \\
 \pi_4 &= [\{(\kappa_{\mathrm{pair}}, \textit{lower bound})\},\;&& 0,\;&& \textrm{2004}] \\
 \pi_5 &= [\{(\kappa_{\mathrm{pair}}, \textit{upper bound})\},\;&& 1,\;&& \textrm{2004}]
 \end{alignat*}
-This second policy says that, across wedding posits, each husband-wife combination may occur at most once as a couple, regardless of what other roles some richer wedding posit family might also contain.
+This second policy says that, for each husband-wife combination, at most one distinct posit identity classified under \(C_{\mathrm{wedding}}\) may occur, regardless of what other roles some richer wedding posit family might also contain.
 
 Let a single positor \(E\) assert \(\mu_1\)--\(\mu_5\), \(\pi_1\)--\(\pi_5\), and all four wedding posits decisively with \(c = 1\):
 \begin{alignat*}{3}
@@ -292,32 +292,26 @@ Let a single positor \(E\) assert \(\mu_1\)--\(\mu_5\), \(\pi_1\)--\(\pi_5\), an
 [\{(p_{3w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}] \\
 [\{(p_{4w}, \textit{posit}), (E, \textit{ascertains})\},\;&& 1.0,\;&& \textrm{2024\text{-}03\text{-}01}]
 \end{alignat*}
-The information in effect at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). If Archie is currently classified under \(C_{A}\) and both Bella and Fanny are currently classified under \(C_{10}\), then \(p_{1w}\) and \(p_{3w}\) together would violate the upper bound of \(\kappa_{\mathrm{mono}}\), because a current member of \(C_{A}\) would occur with two counted wives from that class within the scoped wedding posit family. If Fanny is outside \(C_{10}\), then \(p_{3w}\) does not count against that policy, and Archie may still have one additional wife outside the constrained group. The couple-uniqueness policy \(\kappa_{\mathrm{pair}}\) is different: it counts husband-wife pairs as units. It would therefore be violated only if the same couple appeared twice within the scoped wedding family, for example if \((A,\textit{husband})\) and \((B,\textit{wife})\) were recorded in two concurrent wedding posits.
+The information in effect at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2004})\) contains only \(p_{1w}\); at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2009})\) only \(p_{2w}\); and at \((\textrm{2024\text{-}03\text{-}01}, \textrm{2012})\) both \(p_{3w}\) and \(p_{4w}\). If Archie is currently classified under \(C_{A}\) and both Bella and Fanny are currently classified under \(C_{10}\), then \(p_{1w}\) and \(p_{3w}\) together would violate the upper bound of \(\kappa_{\mathrm{mono}}\), because a current member of \(C_{A}\) would occur with two counted wives from that class within the scoped wedding posit family. If Fanny is outside \(C_{10}\), then \(p_{3w}\) does not count against that policy, and Archie may still have one additional wife outside the constrained group. The couple-uniqueness policy \(\kappa_{\mathrm{pair}}\) is different: its context selector bundles husband and wife into a single grouping posit, and its target selector uses the \textit{posit class} role, so the counted unit is the posit identity itself. It would therefore be violated only if the same couple appeared in two concurrent wedding posits, for example if \((A,\textit{husband})\) and \((B,\textit{wife})\) were recorded in two distinct posits currently classified under \(C_{\mathrm{wedding}}\).
 
 The same machinery separates other constraints over reused roles. Suppose wedding posits and baptism posits both use the roles \textit{priest} and \textit{church}. Let \(C_{\mathrm{baptism}}\) classify baptism posits, let \(C_{\mathrm{priest}}\) classify priests, let \(C_{\mathrm{church}}\) classify churches, let \(C_{\mathrm{husband}}\) and \(C_{\mathrm{wife}}\) classify spouses in wedding posits, and let \(C_{\mathrm{child}}\) classify children in baptism posits. Then the posits
 \[
 [\{(\kappa_w, \textit{policy}), (C_{\mathrm{wedding}}, \textit{posit class})\}, \textit{active}, t],
-\quad
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest})\}, \textit{context selector}, t],
 \]
 \[
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
-\quad
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband})\}, \textit{target selector}, t],
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
 \]
 \[
-[\{(\kappa_w, \textit{policy}), (C_{\mathrm{wife}}, \textit{wife})\}, \textit{target selector}, t],
+[\{(\kappa_w, \textit{policy}), (C_{\mathrm{husband}}, \textit{husband}), (C_{\mathrm{wife}}, \textit{wife})\}, \textit{target selector}, t],
 \quad
 [\{(\kappa_w, \textit{upper bound})\}, x, t]
 \]
 state that, for each priest-church combination, at most \(x\) distinct husband-wife pairs may occur in wedding posits. Likewise, the posits
 \[
 [\{(\kappa_b, \textit{policy}), (C_{\mathrm{baptism}}, \textit{posit class})\}, \textit{active}, t],
-\quad
-[\{(\kappa_b, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest})\}, \textit{context selector}, t],
 \]
 \[
-[\{(\kappa_b, \textit{policy}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
+[\{(\kappa_b, \textit{policy}), (C_{\mathrm{priest}}, \textit{priest}), (C_{\mathrm{church}}, \textit{church})\}, \textit{context selector}, t],
 \quad
 [\{(\kappa_b, \textit{policy}), (C_{\mathrm{child}}, \textit{child})\}, \textit{target selector}, t],
 \]
