@@ -14,12 +14,11 @@
 \newcommand{\abs}[1]{\left|#1\right|}
 
 \newcounter{majorcount}
-\newcounter{minorcount}[majorcount]
 
 \newcommand{\deffy}[3]{
 	\vspace{2ex}
 	\refstepcounter{majorcount}
-	\noindent\textsc{#1}
+	\noindent\textsc{#1} {\normalfont(\arabic{majorcount})}
 	\\\begin{small}
 	\noindent #2%
 	\label{Def:#3}
@@ -56,11 +55,11 @@
 \cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Conventional data models represent facts reasonably well, but they struggle when several sources disagree, revise earlier statements, or express different levels of confidence about what held when. This is not only a storage problem but an exchange problem: information often needs to pass between parties before they fully agree on identifiers, schema, confidence scales, or value conventions. Such situations are often handled by ad hoc combinations of provenance fields, temporal extensions, and conflict-resolution rules, which either discard information too early or treat assertions as a separate kind of object from the facts they concern. The deeper problem is the continued expectation that there should already be a single version of the truth at capture time.
+Conventional data models struggle when several sources disagree, revise earlier statements, or express different levels of confidence about what held when. This is both a storage and an exchange problem. Existing approaches rely on ad hoc combinations of provenance fields, temporal extensions, and conflict-resolution rules that either discard information too early or treat assertions as separate from the facts they concern. The deeper problem is the continued expectation of a single truth at capture time.
 
-This paper introduces \emph{transitional representation}, a formalism built around one primitive: the \emph{posit}, an \(n\)-ary statement with an appearance time. Facts, classifications, and even assertions about other statements are all represented as posits; an assertion is simply a posit over reserved roles that links a source to another posit together with an assertion time and a signed certainty in the interval \([-1,1]\). This yields a uniform representation for storage and exchange of ordinary facts, disagreement, retractions, corrections, and recursive meta-commentary without adding extra representational machinery.
+This paper introduces \emph{transitional representation}, a formalism built around one primitive: the \emph{posit}, an \(n\)-ary statement with an appearance time. Facts, classifications, and assertions about other statements are all posits; an assertion links a source to another posit with an assertion time and a signed certainty in \([-1,1]\). This yields a uniform representation for ordinary facts, disagreement, retractions, corrections, and recursive meta-commentary without extra representational machinery.
 
-The paper defines a minimal class layer in the same terms, showing that class membership, subclassing, parallel classification frameworks, and model-level disagreement can all be represented inside the formalism. It also shows how constraint policies, including cardinality constraints, can themselves be represented as posits, and gives deterministic temporal-resolution procedures for both ordinary posits and assertion posits, including the derived notion of \emph{information in effect}. Finally, the Traqula query language and the Positorium prototype illustrate that the model is executable and can support query-time resolution of conflicting and evolving information after exchange, rather than forcing reconciliation at capture time.
+The paper defines a minimal class layer in the same terms, showing that class membership, subclassing, parallel classification frameworks, and model-level disagreement can all be represented inside the formalism. It also shows how constraint policies, including cardinality constraints, can themselves be represented as posits, and gives deterministic temporal-resolution procedures for both ordinary posits and assertion posits, including the derived notion of \emph{information in effect}. The Traqula query language and the Positorium prototype illustrate that the model is executable and supports query-time resolution of conflicting and evolving information after exchange, rather than forcing reconciliation at capture time.
 \end{abstract}
 
 \begin{keywords}
@@ -120,7 +119,7 @@ Identifiers are also the one element that positors must align on if disagreement
 \deffy{def. of an appearance set}{%
 An \emph{appearance set}, \(\{(i_1, r_1), \ldots (i_n, r_n)\}\), is a set of appearances where any role \(r_i\) may only appear once.}{appearanceset}
 
-Role uniqueness is a structural requirement, not merely a modeling preference. Because the appearance set is a set, each role names a unique slot that can be addressed unambiguously: the cardinality selectors \((c,r)\) defined later rely on \(r\) picking out exactly one identifier per posit, and the information-in-effect operator groups by \(\Upsilon\) as a whole. Symmetric relationships such as siblinghood are therefore expressed through distinct directional roles (e.g.\ two posits with roles \textit{sibling} and \textit{of}) rather than repeated role instances.
+Role uniqueness is a structural requirement, not merely a modeling preference. Because the appearance set is a set, each role names a unique slot that can be addressed unambiguously: the cardinality selectors \((C,r)\) defined later rely on \(r\) picking out exactly one identifier per posit, and the information-in-effect operator groups by \(\Upsilon\) as a whole. Symmetric relationships such as siblinghood are therefore expressed through distinct directional roles (e.g.\ two posits with roles \textit{sibling} and \textit{of}) rather than repeated role instances.
 
 \deffy{def. of a posit}{%
 A \emph{posit}~\cite{Oxford} is a triple, \(\left[\Upsilon, v, t_{\mathrm{app}}\right]\), where the first element is an appearance set, the second a data value, and the third a time point. The domain \(\mathbb{t}\) from which time points are taken is called \emph{appearance time}.}{posit}
@@ -201,7 +200,7 @@ q_{5} = [\{(C_{\mathrm{suspect}}, \textit{thing}), (C_{\mathrm{person}}, \textit
 asserting that the class identifier $C_{\mathrm{suspect}}$ belongs to the class $C_{\mathrm{person}}$. This is an ordinary classifier posit with a class identifier in the \textit{thing} role. Hierarchies of arbitrary depth arise by composing such posits without introducing any new construct. Like any other posit, subclass relationships have an appearance time and can be asserted, retracted, or disputed.
 
 \textbf{Parallel model frameworks.}
-Because classifiers are asserted posits, an entire classification schema belongs to whichever positors assert its components. Two positors may maintain entirely distinct classification frameworks over the same identifiers without conflict. Suppose a medical records system (positor $M$) classifies patients by clinical criteria (\textit{Person}, \textit{Patient}, \textit{Vaccinated}), while an insurance system (positor $B$) classifies the same identifiers by billing status (\textit{Insured}, \textit{SelfPay}, \textit{Exempt}). Neither schema is globally privileged: both co-exist as separate sets of assertion posits. A query can retrieve $M$'s classifications, $B$'s classifications, or both together, applying the same bitemporal \emph{information in effect} operator uniformly to each. There is no integration ceremony at capture time, and no global schema needs to be agreed upon in advance.
+Because classifiers are asserted posits, an entire classification schema belongs to whichever positors assert its components. Two positors may maintain entirely distinct classification frameworks over the same identifiers without conflict. Suppose a medical records system (positor $M$) classifies patients by clinical criteria (\textit{Person}, \textit{Patient}, \textit{Vaccinated}), while an insurance system (positor $N$) classifies the same identifiers by billing status (\textit{Insured}, \textit{SelfPay}, \textit{Exempt}). Neither schema is globally privileged: both co-exist as separate sets of assertion posits. A query can retrieve $M$'s classifications, $N$'s classifications, or both together, applying the same bitemporal \emph{information in effect} operator uniformly to each. There is no integration ceremony at capture time, and no global schema needs to be agreed upon in advance.
 
 This also means that classification \emph{frameworks} themselves evolve and can be disputed. If $M$ restructures its schema by splitting \textit{Patient} into \textit{AcutePatient} and \textit{ChronicPatient} at some point in time, that restructuring is recorded exactly as it happens: old classifiers carry one history, new classifiers carry another, all queryable bitemporally. The model-level change enters the same information store as the object-level data it governs.
 
@@ -219,7 +218,7 @@ Global cardinality constraints over an entire posit family are often too coarse.
 Constraint formalisms themselves are of course well developed in the literature: relational dependencies provide the classical database treatment, conceptual modeling approaches such as ORM make cardinality and mandatory-role constraints central, and ontology languages such as OWL~2 include qualified cardinality restrictions~\cite{AbiteboulEtAl,HalpinMorgan,OWL2}. The concern here is therefore not to reintroduce constraints as such, but to show that they can themselves be represented as evolving, assertable, and disputable information inside the posit formalism. The following definitions and worked example serve as a proof of expressibility rather than a specification language for practical constraint authoring.
 
 \deffy{def. of a cardinality policy}{%
-Reserve the roles \textit{policy}, \textit{posit class}, \textit{lower bound}, and \textit{upper bound}. A cardinality policy is identified by some identifier \(\kappa\). Let \(C_p\) be a class identifier selecting the posits to which the policy applies, let \(S_{\mathrm{ctx}}\) and \(S_{\mathrm{tgt}}\) be disjoint sets of appearances \((c, r)\), where every \(c\) is a class identifier and \(S_{\mathrm{tgt}}\neq\varnothing\). The policy is represented by the scope posit
+Reserve the roles \textit{policy}, \textit{posit class}, \textit{lower bound}, and \textit{upper bound}. A cardinality policy is identified by some identifier \(\kappa\). Let \(C_p\) be a class identifier selecting the posits to which the policy applies, let \(S_{\mathrm{ctx}}\) and \(S_{\mathrm{tgt}}\) be disjoint sets of appearances \((C, r)\), where every \(C\) is a class identifier and \(S_{\mathrm{tgt}}\neq\varnothing\). The policy is represented by the scope posit
 \[
 [\{(\kappa, \textit{policy}), (C_p, \textit{posit class})\}, \textit{active}, t]
 \]
@@ -568,7 +567,7 @@ Wikidata~\cite{VrandecicKrotzsch}, the world's largest public knowledge graph, r
 
 A second difference is uniformity. In transitional representation, assertions are themselves posits, so the same representational machinery applies recursively. Annotating an assertion therefore uses the same constructs as annotating a first-order fact. RDF can express nested annotation patterns, especially with RDF-star, but the recursion is a matter of increasingly elaborate encoding rather than a single repeated primitive.
 
-\subsection*{Summary}
+\subsection{Summary}
 Table~\ref{Table:rdfcomparison} summarises the four design dimensions discussed above across the main RDF annotation mechanisms and transitional representation.
 
 \begin{table}[pos=htbp]
@@ -741,65 +740,61 @@ Future work includes richer typing beyond the minimal class layer formalized her
 
 \begin{thebibliography}{99}
 
-\bibitem{Allen}
-James F. Allen.
-\newblock Maintaining knowledge about temporal intervals.
-\newblock \emph{Communications of the ACM}, 26(11):832--843, 1983.
+\bibitem{GolfarelliRizzi}
+Matteo Golfarelli and Stefano Rizzi.
+\newblock A survey on temporal data warehousing.
+\newblock \emph{International Journal of Data Warehousing and Mining (IJDWM)}, 5(1):1--17, 2009.
 
-\bibitem{AbiteboulEtAl}
-Serge Abiteboul, Richard Hull, and Victor Vianu.
-\newblock \emph{Foundations of Databases}.
-\newblock Addison-Wesley, 1995.
-
-\bibitem{Anchor}
-Lars Ronnback.
-\newblock \emph{Anchor Modeling}.
-\newblock 2005. \url{http://www.anchormodeling.com/}. Accessed 2018-07-11.
-
-\bibitem{BenjellounEtAl}
-Omar Benjelloun, Anish Das Sarma, Alon Halevy, Martin Theobald, and Jennifer Widom.
-\newblock Databases with uncertainty and lineage.
-\newblock \emph{The VLDB Journal---The International Journal on Very Large Data Bases}, 17(2):243--264, 2008.
-
-\bibitem{Codd}
-Edgar F. Codd.
-\newblock A relational model of data for large shared data banks.
-\newblock \emph{Communications of the ACM}, 13(6):377--387, 1970.
-
-\bibitem{DyllaEtAl}
-Maximilian Dylla, Iris Miliaraki, and Martin Theobald.
-\newblock A temporal-probabilistic database model for information extraction.
-\newblock \emph{Proceedings of the VLDB Endowment}, 6(14):1810--1821, 2013.
+\bibitem{Liu}
+B. Liu.
+\newblock \emph{Uncertainty Theory: An Introduction to Its Axiomatic Foundations}.
+\newblock Springer-Verlag, Berlin, 2004.
 
 \bibitem{FisherEtAl}
 Craig W. Fisher and Bruce R. Kingma.
 \newblock Criticality of data quality as exemplified in two disasters.
 \newblock \emph{Information \& Management}, 39(2):109--116, 2001.
 
-\bibitem{GolfarelliRizzi}
-Matteo Golfarelli and Stefano Rizzi.
-\newblock A survey on temporal data warehousing.
-\newblock \emph{International Journal of Data Warehousing and Mining (IJDWM)}, 5(1):1--17, 2009.
-
-\bibitem{Hultgren}
-Hans Hultgren.
-\newblock \emph{Modeling the Agile Data Warehouse with Data Vault}.
-\newblock New Hamilton, 2012.
-
-\bibitem{HalpinMorgan}
-Terry Halpin and Tony Morgan.
-\newblock \emph{Information Modeling and Relational Databases: From Conceptual Analysis to Logical Design}.
-\newblock Morgan Kaufmann, second edition, 2008.
+\bibitem{SQL2011}
+Krishna Kulkarni and Jan-Eike Michels.
+\newblock Temporal features in SQL: 2011.
+\newblock \emph{ACM Sigmod Record}, 41(3):34--43, 2012.
 
 \bibitem{Johnston}
 Tom Johnston.
 \newblock \emph{Bitemporal Data: Theory and Practice}.
 \newblock Newnes, 2014.
 
-\bibitem{Kent}
-William Kent.
-\newblock A simple guide to five normal forms in relational database theory.
-\newblock \emph{Communications of the ACM}, 26(2):120--125, 1983.
+\bibitem{MassaroEtAl}
+Dominic W. Massaro and Daniel Friedman.
+\newblock Models of integration given multiple sources of information.
+\newblock \emph{Psychological Review}, 97(2):225, 1990.
+
+\bibitem{LinEtAl}
+Jinxin Lin and Alberto O. Mendelzon.
+\newblock Merging databases under constraints.
+\newblock \emph{International Journal of Cooperative Information Systems}, 7(01):55--76, 1998.
+
+\bibitem{Oxford}
+Oxford University Press.
+\newblock \emph{Oxford English Dictionary Online}.
+\newblock \url{https://www.oed.com/}. Accessed 2026-03-15.
+
+\bibitem{AbiteboulEtAl}
+Serge Abiteboul, Richard Hull, and Victor Vianu.
+\newblock \emph{Foundations of Databases}.
+\newblock Addison-Wesley, 1995.
+
+\bibitem{HalpinMorgan}
+Terry Halpin and Tony Morgan.
+\newblock \emph{Information Modeling and Relational Databases: From Conceptual Analysis to Logical Design}.
+\newblock Morgan Kaufmann, second edition, 2008.
+
+\bibitem{OWL2}
+W3C OWL Working Group.
+\newblock \emph{OWL 2 Web Ontology Language Document Overview (Second Edition)}.
+\newblock W3C Recommendation, 2012.
+\newblock \url{https://www.w3.org/TR/owl2-overview/}
 
 \bibitem{ShermanKent1964}
 Sherman Kent.
@@ -814,92 +809,56 @@ Michael~D. Mastrandrea, Christopher~B. Field, Thomas~F. Stocker, Ottmar Edenhofe
 \newblock Intergovernmental Panel on Climate Change (IPCC), 2010.
 \newblock \url{https://www.ipcc.ch/pdf/supporting-material/uncertainty-guidance-note.pdf}
 
-\bibitem{LinEtAl}
-Jinxin Lin and Alberto O. Mendelzon.
-\newblock Merging databases under constraints.
-\newblock \emph{International Journal of Cooperative Information Systems}, 7(01):55--76, 1998.
+\bibitem{Positorium}
+Lars R{\"o}nnb{\"a}ck.
+\newblock Positorium: An experimental database engine based on Transitional Modeling.
+\newblock GitHub repository, 2024. Dual-licensed Apache~2.0/MIT.
+\newblock \url{https://github.com/Roenbaeck/positorium}
+
+\bibitem{Kent}
+William Kent.
+\newblock A simple guide to five normal forms in relational database theory.
+\newblock \emph{Communications of the ACM}, 26(2):120--125, 1983.
+
+\bibitem{Codd}
+Edgar F. Codd.
+\newblock A relational model of data for large shared data banks.
+\newblock \emph{Communications of the ACM}, 13(6):377--387, 1970.
+
+\bibitem{RonnbackEtAl}
+Lars R{\"o}nnb{\"a}ck, Olle Regardt, Maria Bergholtz, Paul Johannesson, and Petia Wohed.
+\newblock Anchor modeling---Agile information modeling in evolving data environments.
+\newblock \emph{Data \& Knowledge Engineering}, 69(12):1229--1253, 2010.
+
+\bibitem{Anchor}
+Lars R{\"o}nnb{\"a}ck.
+\newblock \emph{Anchor Modeling}.
+\newblock 2005. \url{http://www.anchormodeling.com/}. Accessed 2018-07-11.
 
 \bibitem{LinstedtEtAl}
 Dan Linstedt and Kent Graziano.
 \newblock \emph{Super Charge Your Data Warehouse: Invaluable Data Modeling Rules to Implement Your Data Vault}.
 \newblock CreateSpace, 2011.
 
-\bibitem{Liu}
-B. Liu.
-\newblock \emph{Uncertainty Theory: An Introduction to Its Axiomatic Foundations}.
-\newblock Springer-Verlag, Berlin, 2004.
-
-\bibitem{LiuEtAl}
-Zhun-ga Liu, Quan Pan, Yong-mei Cheng, and Jean Dezert.
-\newblock Sequential adaptive combination of unreliable sources of evidence.
-\newblock \emph{Advances and Applications of DSmT for Information Fusion}, 2:23, 2015.
-
-\bibitem{MassaroEtAl}
-Dominic W. Massaro and Daniel Friedman.
-\newblock Models of integration given multiple sources of information.
-\newblock \emph{Psychological Review}, 97(2):225, 1990.
-
-\bibitem{MoensSteedman}
-Marc Moens and Mark Steedman.
-\newblock Temporal ontology and temporal reference.
-\newblock \emph{Computational Linguistics}, 14(2):15--28, 1988.
-
-\bibitem{Motro}
-Amihai Motro.
-\newblock Imprecision and uncertainty in database systems.
-\newblock In \emph{Fuzziness in Database Management Systems}, pages 3--22.
-  Springer, 1995.
-
-\bibitem{Oxford}
-Oxford University Press.
-\newblock \emph{The Oxford English Dictionary}.
-\newblock 2017. \url{https://en.oxforddictionaries.com/definition/posit}. Accessed 2018-07-11.
-
-\bibitem{Papafragou}
-Anna Papafragou.
-\newblock Epistemic modality and truth conditions.
-\newblock \emph{Lingua}, 116(10):1688--1702, 2006.
-
-\bibitem{RDF}
-W3C RDF Working Group.
-\newblock \emph{Resource Description Framework}.
-\newblock 2004. \url{http://www.w3.org/RDF/}. Accessed 2018-07-11.
-
-\bibitem{Reichenbach}
-Hans Reichenbach.
-\newblock The tenses of verbs.
-\newblock \emph{Time: From Concept to Narrative Construct: a Reader}, 1947.
-
-\bibitem{RonnbackEtAl}
-Lars Ronnback, Olle Regardt, Maria Bergholtz, Paul Johannesson, and Petia Wohed.
-\newblock Anchor modeling---Agile information modeling in evolving data environments.
-\newblock \emph{Data \& Knowledge Engineering}, 69(12):1229--1253, 2010.
-
-\bibitem{Smets}
-Philippe Smets.
-\newblock Imperfect information: Imprecision and uncertainty.
-\newblock In \emph{Uncertainty Management in Information Systems}, pages 225--254.
-  Springer, 1997.
-
-\bibitem{SmetsEtAl}
-Philippe Smets and Robert Kennes.
-\newblock The transferable belief model.
-\newblock \emph{Artificial Intelligence}, 66(2):191--234, 1994.
+\bibitem{Hultgren}
+Hans Hultgren.
+\newblock \emph{Modeling the Agile Data Warehouse with Data Vault}.
+\newblock New Hamilton, 2012.
 
 \bibitem{Snodgrass}
 Richard Snodgrass and Ilsoo Ahn.
 \newblock A taxonomy of time databases.
 \newblock \emph{ACM Sigmod Record}, 14(4):236--246, 1985.
 
-\bibitem{SQL2011}
-Krishna Kulkarni and Jan-Eike Michels.
-\newblock Temporal features in SQL: 2011.
-\newblock \emph{ACM Sigmod Record}, 41(3):34--43, 2012.
+\bibitem{BenjellounEtAl}
+Omar Benjelloun, Anish Das Sarma, Alon Halevy, Martin Theobald, and Jennifer Widom.
+\newblock Databases with uncertainty and lineage.
+\newblock \emph{The VLDB Journal---The International Journal on Very Large Data Bases}, 17(2):243--264, 2008.
 
-\bibitem{Matsakis}
-Nicholas D. Matsakis and Felix S. Klock II.
-\newblock The Rust language.
-\newblock In \emph{Proceedings of the 2014 ACM SIGAda Annual Conference on High Integrity Language Technology (HILT~2014)}, pages 103--104. ACM, 2014.
+\bibitem{RDF}
+W3C RDF Working Group.
+\newblock \emph{Resource Description Framework}.
+\newblock 2004. \url{http://www.w3.org/RDF/}. Accessed 2018-07-11.
 
 \bibitem{NoyRector}
 Natasha Noy and Alan Rector.
@@ -918,6 +877,70 @@ Olaf Hartig and Pierre-Antoine Champin.
 \newblock W3C Community Group Report, December 2021.
 \newblock \url{https://www.w3.org/2021/12/rdf-star.html}
 
+\bibitem{OWLTime}
+Simon Cox and Chris Little.
+\newblock Time Ontology in OWL.
+\newblock W3C Candidate Recommendation, November 2022.
+\newblock \url{https://www.w3.org/TR/owl-time/}
+
+\bibitem{Allen}
+James F. Allen.
+\newblock Maintaining knowledge about temporal intervals.
+\newblock \emph{Communications of the ACM}, 26(11):832--843, 1983.
+
+\bibitem{VrandecicKrotzsch}
+Denny Vrande\v{c}i\'{c} and Markus Kr\"otzsch.
+\newblock Wikidata: A free collaborative knowledgebase.
+\newblock \emph{Communications of the ACM}, 57(10):78--85, 2014.
+
+\bibitem{Reichenbach}
+Hans Reichenbach.
+\newblock The tenses of verbs.
+\newblock \emph{Time: From Concept to Narrative Construct: a Reader}, 1947.
+
+\bibitem{DyllaEtAl}
+Maximilian Dylla, Iris Miliaraki, and Martin Theobald.
+\newblock A temporal-probabilistic database model for information extraction.
+\newblock \emph{Proceedings of the VLDB Endowment}, 6(14):1810--1821, 2013.
+
+\bibitem{Smets}
+Philippe Smets.
+\newblock Imperfect information: Imprecision and uncertainty.
+\newblock In \emph{Uncertainty Management in Information Systems}, pages 225--254.
+  Springer, 1997.
+
+\bibitem{Motro}
+Amihai Motro.
+\newblock Imprecision and uncertainty in database systems.
+\newblock In \emph{Fuzziness in Database Management Systems}, pages 3--22.
+  Springer, 1995.
+
+\bibitem{SmetsEtAl}
+Philippe Smets and Robert Kennes.
+\newblock The transferable belief model.
+\newblock \emph{Artificial Intelligence}, 66(2):191--234, 1994.
+
+\bibitem{LiuEtAl}
+Zhun-ga Liu, Quan Pan, Yong-mei Cheng, and Jean Dezert.
+\newblock Sequential adaptive combination of unreliable sources of evidence.
+\newblock \emph{Advances and Applications of DSmT for Information Fusion}, 2:23, 2015.
+
+\bibitem{Fowler2011}
+Martin Fowler.
+\newblock CQRS.
+\newblock MartinFowler.com, July 2011.
+\newblock \url{https://martinfowler.com/bliki/CQRS.html}
+
+\bibitem{Papafragou}
+Anna Papafragou.
+\newblock Epistemic modality and truth conditions.
+\newblock \emph{Lingua}, 116(10):1688--1702, 2006.
+
+\bibitem{MoensSteedman}
+Marc Moens and Mark Steedman.
+\newblock Temporal ontology and temporal reference.
+\newblock \emph{Computational Linguistics}, 14(2):15--28, 1988.
+
 \bibitem{Lacroix2020}
 Timoth\'ee Lacroix, Guillaume Obozinski, and Nicolas Usunier.
 \newblock Tensor Decompositions for Temporal Knowledge Base Completion.
@@ -933,39 +956,15 @@ Nadime Francis, Alastair Green, Paolo Guagliardo, Leonid Libkin, Tobias Lindaake
 \newblock Cypher: An Evolving Query Language for Property Graphs.
 \newblock In \emph{Proceedings of the 2018 International Conference on Management of Data (SIGMOD)}, pages 1433--1445. ACM, 2018.
 
-\bibitem{Fowler2011}
-Martin Fowler.
-\newblock CQRS.
-\newblock MartinFowler.com, July 2011.
-\newblock \url{https://martinfowler.com/bliki/CQRS.html}
-
-\bibitem{VrandecicKrotzsch}
-Denny Vrande\v{c}i\'{c} and Markus Kr\"otzsch.
-\newblock Wikidata: A free collaborative knowledgebase.
-\newblock \emph{Communications of the ACM}, 57(10):78--85, 2014.
-
-\bibitem{OWLTime}
-Simon Cox and Chris Little.
-\newblock Time Ontology in OWL.
-\newblock W3C Candidate Recommendation, November 2022.
-\newblock \url{https://www.w3.org/TR/owl-time/}
-
-\bibitem{OWL2}
-W3C OWL Working Group.
-\newblock \emph{OWL 2 Web Ontology Language Document Overview (Second Edition)}.
-\newblock W3C Recommendation, 2012.
-\newblock \url{https://www.w3.org/TR/owl2-overview/}
+\bibitem{Matsakis}
+Nicholas D. Matsakis and Felix S. Klock II.
+\newblock The Rust language.
+\newblock In \emph{Proceedings of the 2014 ACM SIGAda Annual Conference on High Integrity Language Technology (HILT~2014)}, pages 103--104. ACM, 2014.
 
 \bibitem{Chambi}
 S.~Chambi, D.~Lemire, O.~Kaser, and R.~Godin.
 \newblock Better bitmap performance with Roaring Bitmaps.
 \newblock \emph{Software: Practice and Experience}, 46(5):709--719, 2016.
-
-\bibitem{Positorium}
-Lars R{\"o}nnb{\"a}ck.
-\newblock Positorium: An experimental database engine based on Transitional Modeling.
-\newblock GitHub repository, 2024. Dual-licensed Apache~2.0/MIT.
-\newblock \url{https://github.com/Roenbaeck/positorium}
 
 \end{thebibliography}
 
